@@ -1,0 +1,106 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Pyinstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nosexy/
+.nosetests/
+.pytest_cache/
+vts/
+.cov/
+.coverage
+.coverage.*
+coverage.xml
+nosetests.xml
+unittest_results.xml
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Sphinx documentation
+doc/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of microservices or stand-alone apps, it might be better to lock the deps.
+# Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is declared in the project's interest to lock the deps.
+# poetry.lock
+
+# pdm
+.pdm.toml
+.pdm-plugins/
+
+# uv  (uv.lock IS committed — it pins the dependency graph; see guidelines §8.4)
+.venv/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific — secrets (never commit real credentials)
+.env
+*.key
+*.pem
+credentials.json
+
+# Match logs (generated at runtime; keep the results/ folder itself)
+results/*.log
+results/*.jsonl

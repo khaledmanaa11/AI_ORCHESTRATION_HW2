@@ -1,0 +1,48 @@
+[project]
+name = "agent-arena"
+version = "1.00"
+description = "A network orchestration substrate for running multi-agent turn-based matches over TCP"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+referee = "agent_arena.apps.referee_app:main"
+player = "agent_arena.apps.player_app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "A", "C4", "RET", "SIM", "ARG", "PTH"]
+# E501 (line-too-long) is reported by ruff format, not lint; suppress the lint duplicate
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "--cov=agent_arena --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src"]
+# apps/ are thin entry-point wrappers with no testable logic; exclude them from coverage
+omit = ["src/agent_arena/apps/*", "*/tests/*"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true

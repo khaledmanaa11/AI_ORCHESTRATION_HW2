@@ -1,0 +1,21 @@
+{
+  "version": "1.00",
+  "network": {
+    "host": "127.0.0.1",
+    "port": 9000,
+    "player_count": 2,
+    "connect_timeout_seconds": 5.0,
+    "read_timeout_seconds": 15.0
+  },
+  "game": {
+    "move_timeout_seconds": 10.0,
+    "lobby_timeout_seconds": 30.0,
+    "heartbeat_interval_seconds": 5.0
+  },
+  "framing": {
+    "max_frame_size_bytes": 10485760
+  },
+  "llm": {
+    "model_name": "claude-opus-4-5"
+  }
+}
