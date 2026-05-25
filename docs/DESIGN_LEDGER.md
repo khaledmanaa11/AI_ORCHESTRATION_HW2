@@ -11,8 +11,12 @@
 > ledger is the source material for the `PRD_referee` + `PLAN_referee` + `TODO_referee` triplet.
 > Legend: ✅ locked · 🟡 in progress · ⬜ open
 >
-> **▶ RESUME HERE (as of 2026-05-25):** S1–S9 ALL LOCKED — **all design sessions closed. Next = S10 · consolidate
-> the ledger into the `PRD_referee` + `PLAN_referee` + `TODO_referee` triplet** (transcription, not new thinking).
+> **▶ DESIGN PHASE COMPLETE (as of 2026-05-25):** S1–S10 ALL DONE. S1–S9 locked here; **S10 transcribed this
+> ledger into the development triplet — [PRD_referee.md](PRD_referee.md) + [PLAN_referee.md](PLAN_referee.md) +
+> [TODO_referee.md](TODO_referee.md)** (every requirement cites its ledger ID). **Next = development** per
+> `TODO_referee.md` build order (A debate_state → B debate_engine → C brain/base → D simple_brain → E game_loop →
+> F config/constants → G integration gate T6.3 → H llm_brain → I experiment harness). This ledger stays the
+> rationale-of-record; the triplet is the actionable spec.
 > **S9 recap (decided autonomously):** `SimpleRefereeBrain` (T4.8) = a pure, stateless, no-external-call `decide()`
 > honoring the S6 contract (6.i) — concession-only Tier-2 keyword scan (9.b), number-free templated tell (9.c),
 > word-count-normalized scores identical across the 4 criteria (9.d), the 6.h verdict aggregate applied
@@ -213,3 +217,15 @@ Atomic decisions:
 - [x] **9.i. EXIT — what Phase-1 proves, and the swap it de-risks.** Wired together — the real `DebateEngine` (S5: `validate_move`/`apply_move`/`is_terminal`, **pure deterministic mechanics, zero LLM**) + `SimpleRefereeBrain` (9.a–9.g) + a seeded placeholder player (9.h) — T6.3 drives the **entire debate lifecycle** deterministically: `REGISTER → REGISTER_ACK → ROLE_ASSIGN(game_config) → GAME_START → N×(MOVE_REQUEST → MOVE_SUBMIT → [Tier-1 validate] → EVALUATE_TURN → STATE_UPDATE broadcast) → RENDER_VERDICT → GAME_OVER`, asserting the 8.6 invariant (always exactly one verdict) and the 7.a protocol zero-diff. **Because the `DebateEngine` carries no LLM, Phase-7 (T7) changes ONLY the two brain classes** (`SimpleRefereeBrain`→`LLMRefereeBrain`, placeholder player→`LLMPlayerBrain`) — engine, `DebateState`, config and protocol all stay byte-for-byte ⇒ AC9 proven by construction and the costly LLM phase de-risked before a single token is spent. **T4.2 `trivial_game.py` reconciliation:** it stays as the *bare* `GameEngine`-abstract conformance smoke-test (T4.1/T4.2 DoD), but the **debate** Phase-1 proof runs the real `DebateEngine`, not the trivial game — so "the loop" we prove is the actual one we ship.
 
 > **S9 CLOSED.** 9 atomic decisions (9.a–9.i) locked. `SimpleRefereeBrain` = a pure, stateless, no-external-call `decide()` impl: concession-only Tier-2 scan (9.b), number-free templated tell (9.c), word-count-normalized identical-across-criteria scores (9.d), the 6.h verdict aggregate applied mechanically with a fixed deterministic tiebreak (9.e) — total over any trajectory (9.f), variant/pack-agnostic (9.g), paired with a seeded placeholder player (9.h) so T6.3 runs the **real `DebateEngine`** end-to-end to a reproducible `GAME_OVER` (9.i). **Every decision composes existing S5/S6 contracts — zero new infrastructure.** **Forward items:** *(S10/TODO)* build `simple_brain.py` per 9.a–9.g (T4.8); ensure the T5.2 player placeholder is seeded/canned (9.h); the real `DebateEngine` (S5) + `RefereeBrain` base / `RefereeContext` / `RefereeDecision` (S6) are prerequisites of the 9.i T6.3 run. **▶ ALL DESIGN SESSIONS S1–S9 CLOSED — next = S10: consolidate the ledger into the `PRD_referee` + `PLAN_referee` + `TODO_referee` triplet.**
+
+## S10 · Consolidate → write the triplet — ✅ done
+Not a decision session — the transcription step. The locked S1–S9 decisions were written into the development
+triplet, scoped to the **referee + debate game** (the player's private arsenal is a sibling triplet; only the
+public move contract is included here):
+- **[PRD_referee.md](PRD_referee.md)** — purpose/scope, 8 goals, 11 acceptance criteria (incl. **R-AC9 zero protocol diff**), and functional requirements per component: game state/move (FR-ST), `DebateEngine` (FR-EN), `RefereeBrain` contract (FR-RB), judge rubric/verdict (FR-JU), moderator (FR-MO), `SimpleRefereeBrain` (FR-SB), game-loop fault policy (FR-FT), config block (FR-CF), protocol mapping (§10), experiment (FR-EX). Every requirement cites its ledger ID.
+- **[PLAN_referee.md](PLAN_referee.md)** — the two specialization seams (game + brain), file structure, the generic↔specific boundary, the `decide()` interface in prose, the turn-loop sequence, the public/private boundary, the fault cascade, 12 ADRs (REF-001…012) transcribed from the ledger, and a dependency-ordered build order.
+- **[TODO_referee.md](TODO_referee.md)** — task-level work items (Modules A–I) with a DoD each, mapped to both PRD requirements and ledger IDs, aligned to parent `TODO.md` tasks (T4.1/4.3/4.5/4.7/4.8, T6.3, T7.2, TC.8).
+
+> **S10 DONE → DESIGN PHASE COMPLETE.** This ledger remains the rationale-of-record; the triplet is the actionable
+> spec handed to development. Build per the `TODO_referee.md` order; the hard gate is the T6.3 integration test
+> (RG.2) running the real `DebateEngine` + `SimpleRefereeBrain` to a reproducible `GAME_OVER` before the LLM swap.

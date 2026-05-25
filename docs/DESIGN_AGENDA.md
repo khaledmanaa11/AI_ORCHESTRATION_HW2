@@ -5,7 +5,7 @@
 | Document | `DESIGN_AGENDA.md`                         |
 | Project  | `agent-arena`                              |
 | Date     | 2026-05-25                                 |
-| Status   | S1–S9 LOCKED — next = S10 (write the triplet) |
+| Status   | COMPLETE — S1–S9 locked, S10 triplet written; ready for development |
 
 > This is a plan for **deciding**, not for coding. It sequences the design sessions that
 > take us from mid-discussion to "every choice made & recorded," at which point we write
@@ -49,7 +49,7 @@ is reading/exploiting the judge, which can't be specced until the rubric exists.
 | ~~**S7**~~ ✅ | Protocol & config mapping | 10, 11 | **DONE** — ZERO protocol diff (version `"1.00"`, no new type/payload field, AC9); debate rides generic slots; `debate` config block recorded (7.a–7.j) |
 | ~~**S8**~~ ✅ | Edge cases & experiment design | 12, 14 | **DONE** — verdict-reachability fault policy (8.1–8.6, zero new infra) + the ON-vs-OFF × 3-judge sweep, mirror pairs, READ-accuracy test, 5 hypotheses (8.7–8.15) |
 | ~~**S9**~~ ✅ | Phase-1 placeholder | 13 | **DONE** — full scripted `SimpleRefereeBrain` (9.a–9.i): pure/stateless `decide()`, concession-only Tier-2, word-count scores, deterministic 6.h verdict; T6.3 runs the real `DebateEngine` to `GAME_OVER` pre-LLM |
-| **S10** *(next)* | Consolidate → write the triplet | — | `PRD_referee` + `PLAN_referee` + `TODO_referee` written |
+| ~~**S10**~~ ✅ | Consolidate → write the triplet | — | **DONE** — [PRD_referee.md](PRD_referee.md) + [PLAN_referee.md](PLAN_referee.md) + [TODO_referee.md](TODO_referee.md) written (transcription of S1–S9); hand off to development |
 
 ---
 
