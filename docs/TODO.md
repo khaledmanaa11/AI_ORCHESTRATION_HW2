@@ -29,45 +29,45 @@
       tree; directory structure matches PLAN §4 exactly.
 
 ## Phase 1 — Foundation (Milestone M1)
-- [ ] **T1.1** `shared/version.py` — `VERSION = "1.00"`, exported as `__version__`. —
+- [x] **T1.1** `shared/version.py` — `VERSION = "1.00"`, exported as `__version__`. —
       *DoD:* importable; tested.
-- [ ] **T1.2** `config/setup.json` — `host`, `port`, `player_count`, `move_timeout`,
+- [x] **T1.2** `config/setup.json` — `host`, `port`, `player_count`, `move_timeout`,
       `lobby_timeout`, `heartbeat_interval`, `framing_scheme`, `llm_model_name`,
       `"version": "1.00"`. `config/logging_config.json`. — *DoD:* no operational value
       lives in source; file is version-stamped.
-- [ ] **T1.3** `shared/config.py` — load + validate config files; reject mismatched
+- [x] **T1.3** `shared/config.py` — load + validate config files; reject mismatched
       `version`. — *DoD:* tested; version mismatch raises a typed error.
-- [ ] **T1.4** `shared/logging_setup.py` — structured logging from `logging_config.json`;
+- [x] **T1.4** `shared/logging_setup.py` — structured logging from `logging_config.json`;
       outputs to `results/`. — *DoD:* tested; log level changeable without code edit.
-- [ ] **T1.5** `constants.py` — immutable constants and config-key names. — *DoD:* no
+- [x] **T1.5** `constants.py` — immutable constants and config-key names. — *DoD:* no
       magic strings anywhere else in the codebase.
 
 ## Phase 2 — Transport (Milestone M2)
-- [ ] **T2.1** `shared/transport/channel.py` — `Channel` abstract interface
+- [x] **T2.1** `shared/transport/channel.py` — `Channel` abstract interface
       (send/receive methods; timeout parameter). — *DoD:* interface documented; mockable
       in tests without a real socket.
-- [ ] **T2.2** `shared/transport/framing.py` — length-prefix framing (4-byte big-endian
+- [x] **T2.2** `shared/transport/framing.py` — length-prefix framing (4-byte big-endian
       header). — *DoD:* handles partial reads, oversized frames, and empty streams; tested.
-- [ ] **T2.3** `shared/transport/tcp_server.py` — bind/listen/accept; spawns one thread
+- [x] **T2.3** `shared/transport/tcp_server.py` — bind/listen/accept; spawns one thread
       per connection; hands messages to a thread-safe Queue. — *DoD:* accepts N clients;
       rejects beyond `player_count`; tested with mock clients.
-- [ ] **T2.4** `shared/transport/tcp_client.py` — connect with exponential backoff; send/
+- [x] **T2.4** `shared/transport/tcp_client.py` — connect with exponential backoff; send/
       recv via `Channel`. — *DoD:* retry policy from config; tested.
-- [ ] **T2.5** Unit tests: two in-memory channels exchange a framed message; framing edge
+- [x] **T2.5** Unit tests: two in-memory channels exchange a framed message; framing edge
       cases pass. — *DoD:* coverage on all framing paths ≥ 85 %.
 
 ## Phase 3 — Protocol (Milestone M3)
-- [ ] **T3.1** `protocol/message_types.py` — `MessageType` enum covering all lifecycle
+- [x] **T3.1** `protocol/message_types.py` — `MessageType` enum covering all lifecycle
       types (PLAN §6.2). — *DoD:* no string literals used elsewhere for message types.
-- [ ] **T3.2** `protocol/envelope.py` — envelope dataclass (`protocol_version`, `type`,
+- [x] **T3.2** `protocol/envelope.py` — envelope dataclass (`protocol_version`, `type`,
       `match_id` nullable, `sender`, `seq`, `timestamp`, `payload`). — *DoD:* `match_id`
       is explicitly nullable; tested.
-- [ ] **T3.3** `protocol/payloads.py` — per-type payload schemas (one class per message
+- [x] **T3.3** `protocol/payloads.py` — per-type payload schemas (one class per message
       type). Split from envelope to respect the ≤ 150-line rule. — *DoD:* all types from
       §6.2 represented.
-- [ ] **T3.4** `protocol/codec.py` — encode envelope → bytes; decode bytes → envelope. —
+- [x] **T3.4** `protocol/codec.py` — encode envelope → bytes; decode bytes → envelope. —
       *DoD:* round-trip tested; malformed input raises typed error.
-- [ ] **T3.5** `protocol/validation.py` — check `protocol_version`; check type is known;
+- [x] **T3.5** `protocol/validation.py` — check `protocol_version`; check type is known;
       check payload schema. — *DoD:* incompatible version and unknown type each produce
       typed rejections.
 
