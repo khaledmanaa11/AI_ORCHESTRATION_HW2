@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from agent_arena.constants import EXPECTED_CONFIG_VERSION
 
@@ -28,12 +28,56 @@ class FramingConfig(BaseModel):
 class LLMConfig(BaseModel):
     model_name: str = Field(..., description="Anthropic model identifier used by LLM brains")
 
+# ── Debate config submodels (Module G) ──────────────────────────────
+
+class DebateFormatConfig(BaseModel):
+    rebuttal_rounds: int = 3
+    word_cap: int = 250
+    first_speaker: str = "PRO"
+    retry_cap: int = 1
+
+class DebateJudgeConfig(BaseModel):
+    variant: str = "naive"
+    weights: dict[str, int] = {"logic": 30, "evidence": 30, "rebuttal": 25, "persuasion": 15}
+
+    @model_validator(mode="after")
+    def weights_sum_100(self) -> "DebateJudgeConfig":
+        if sum(self.weights.values()) != 100:
+            raise ValueError("judge weights must sum to 100")
+        if self.variant not in {"naive", "hardened", "structural"}:
+            raise ValueError(f"unknown judge variant: {self.variant}")
+        return self
+
+class DebateAblationConfig(BaseModel):
+    master: bool = False
+    vectors: dict[str, bool] = {}
+    baseline_mode: str = "beta"
+
+class DebatePlayerConfig(BaseModel):
+    best_of_N: int = 3  # noqa: N815
+    private_capture: bool = True
+    ablation: DebateAblationConfig = DebateAblationConfig()
+
+class DebateMatchConfig(BaseModel):
+    motion: str
+    evidence_pack: str
+    seed: int
+
+class DebateConfig(BaseModel):
+    format: DebateFormatConfig = DebateFormatConfig()
+    judge: DebateJudgeConfig = DebateJudgeConfig()
+    player: DebatePlayerConfig = DebatePlayerConfig()
+    match: DebateMatchConfig
+
+# ── Root config ─────────────────────────────────────────────────────
+
 class SetupConfig(BaseModel):
     version: str = Field(..., description="Configuration file schema version")
     network: NetworkConfig
     game: GameConfig
     framing: FramingConfig
     llm: LLMConfig
+    debate: DebateConfig
 
 def load_setup_config(path: str | Path) -> SetupConfig:
     with Path(path).open(encoding="utf-8") as f:

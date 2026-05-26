@@ -11,35 +11,17 @@
 
 ## ⚡ NEXT-SESSION HANDOFF (pick up here)
 
-**Completed so far:** Modules A → F (commits a4b4aaf → de73d5c, pushed to `origin/master`).
-**Current gate result:** ruff=0 violations, 216/218 tests pass (2 pre-existing `test_config.py` failures unrelated to our work), coverage = **97%**.
+**Completed so far:** Modules A → G (commits a4b4aaf → 761b4f4).
+**Current gate result:** ruff=0 violations, 226/226 tests pass, coverage = **97%**.
 
-**Start next session with Module G** — implement:
+**Start next session with Module H** — implement:
 
-### Module F — next (commit: `feat(referee/match-setup)`)
-Files to create:
-- `src/agent_arena/services/referee/matchmaking.py` — debate-specific bits:
-  `build_game_config()`, seeded PRO/CON assignment, `ROLE_ASSIGN` payload construction, pre-`GAME_START` abort path.
-- `tests/unit/services/referee/test_matchmaking.py` — RF5.1–RF5.3 tests.
-
-Key constraints to honour:
-- `judge_variant` must **never** appear in any player-bound payload (RF1.2, R-AC2).
-- Same `evidence_pack` bytes to both players (RF1.3).
-- Same seed → same PRO/CON assignment (RF2.1).
-- Pre-start abort → **no** results row written (RF4.1, distinct from mid-match disconnect).
-- Zero protocol diff: reuse existing `MessageType.ROLE_ASSIGN`; no new fields (R-AC9).
-
-### Then Module G (`feat(config/debate)`)
-- Add `debate` block to `config/setup.json`.
-- Extend `shared/config.py` validation for the new block.
-- Tests: RG3.1.
-
-### Then Module H — HARD GATE (`test(integration/debate-loop)`)
+### Module H — HARD GATE (`test(integration/debate-loop)`)
 - `tests/integration/test_debate_loop.py` — real `DebateEngine` + `SimpleRefereeBrain` + 2 seeded players over localhost → deterministic `GAME_OVER`.
 - Same seed run twice → byte-identical `final_state.verdict`.
 - Fault injection: kill player mid-match → tagged forced verdict.
 
-**Build order reminder:** F → G → H (gate) → I → J. Commit after each module passes gate.
+**Build order reminder:** G → H (gate) → I → J. Commit after each module passes gate.
 
 ---
 
@@ -354,25 +336,25 @@ Key constraints to honour:
 ## Module G — Config & constants · `config/setup.json` + `constants.py` (S7) → T1.2/T1.5
 
 ### G1 — `debate` config block (FR-CF1, FR-CF2)
-- [ ] **RG1.1** Add `debate.format` = `{rebuttal_rounds:3, word_cap:250, first_speaker:"PRO", retry_cap:1}` (total_turns derived, not stored).
+- [x] **RG1.1** Add `debate.format` = `{rebuttal_rounds:3, word_cap:250, first_speaker:"PRO", retry_cap:1}` (total_turns derived, not stored).
   - *DoD:* `shared/config.py` loads it; version `"1.00"` (FR-CF1, 7.i).
-- [ ] **RG1.2** Add `debate.judge` = `{variant:"naive", weights:{logic:30,evidence:30,rebuttal:25,persuasion:15}}` (referee-only).
+- [x] **RG1.2** Add `debate.judge` = `{variant:"naive", weights:{logic:30,evidence:30,rebuttal:25,persuasion:15}}` (referee-only).
   - *DoD:* loaded; weights sum to 100 (validation).
-- [ ] **RG1.3** Add `debate.player` = `{best_of_N:3, private_capture:true, ablation:{master:false, vectors:{sycophancy,authority,bandwagon,fallacy,adaptive_persona,bestN_judge_select,read_targeting}, baseline_mode:"beta"}}`.
+- [x] **RG1.3** Add `debate.player` = `{best_of_N:3, private_capture:true, ablation:{master:false, vectors:{sycophancy,authority,bandwagon,fallacy,adaptive_persona,bestN_judge_select,read_targeting}, baseline_mode:"beta"}}`.
   - *DoD:* `master=false` ⇒ OFF roster; both players read identical block (FR-CF2, 7.j).
-- [ ] **RG1.4** Add `debate.match` = `{motion:"<id>", evidence_pack:"<id>", seed:<int>}`.
+- [x] **RG1.4** Add `debate.match` = `{motion:"<id>", evidence_pack:"<id>", seed:<int>}`.
   - *DoD:* loaded; referee selects, motion+pack flow to players (7.i).
-- [ ] **RG1.5** Extend `shared/config.py` validation for the `debate` block (types, weight sum, variant enum).
+- [x] **RG1.5** Extend `shared/config.py` validation for the `debate` block (types, weight sum, variant enum).
   - *DoD:* a malformed block raises a typed error (no operational value in source, AC8).
 
 ### G2 — Constants (7.d, 8.4)
-- [ ] **RG2.1** Add error-code tokens `ERROR_ILLEGAL_MOVE="ILLEGAL_MOVE"`, `ERROR_MALFORMED_MESSAGE="MALFORMED_MESSAGE"` and reason tokens (`empty`/`over_length`/`malformed`/`off_topic`/`concession`/`timeout`/`retry_exhausted`).
+- [x] **RG2.1** Add error-code tokens `ERROR_ILLEGAL_MOVE="ILLEGAL_MOVE"`, `ERROR_MALFORMED_MESSAGE="MALFORMED_MESSAGE"` and reason tokens (`empty`/`over_length`/`malformed`/`off_topic`/`concession`/`timeout`/`retry_exhausted`).
   - *DoD:* no magic strings for codes/reasons elsewhere (7.d, 8.4).
-- [ ] **RG2.2** Add `terminated_reason` tokens (`disconnect`/`aborted`) and debate config-key name constants.
+- [x] **RG2.2** Add `terminated_reason` tokens (`disconnect`/`aborted`) and debate config-key name constants.
   - *DoD:* loop + result use the constants, not literals.
 
 ### G3 — Tests
-- [ ] **RG3.1** `test_config` extension: load the debate block, assert defaults + validation failures.
+- [x] **RG3.1** `test_config` extension: load the debate block, assert defaults + validation failures.
   - *DoD:* assertions pass.
 
 ---
@@ -478,7 +460,7 @@ Key constraints to honour:
 | 4 | D1–D7 | `feat(referee/simple-brain)`     | determinism + no-external-call guard green | ✅ 12f5004 |
 | 5 | E1–E8 | `feat(referee/game-loop)`        | retry/timeout/disconnect/invariant tests green | ✅ bc00e69 |
 | 6 | F1–F5 | `feat(referee/match-setup)`      | game_config + pre-start abort tests green | ✅ de73d5c |
-| 7 | G1–G3 | `feat(config/debate)`            | config load + validation green | ⏳ |
+| 7 | G1–G3 | `feat(config/debate)`            | config load + validation green | ✅ 761b4f4 |
 | 8 | H1–H2 | `test(integration/debate-loop)`  | **HARD GATE — real DebateEngine → reproducible GAME_OVER** | ⏳ |
 | 9 | I1–I3 | `feat(referee/llm-brain)`        | swap-only; AC9 still holds | ⏳ |
 | 10| J1–J4 | `feat(experiment/harness)`       | sweep + notebook run end-to-end | ⏳ |

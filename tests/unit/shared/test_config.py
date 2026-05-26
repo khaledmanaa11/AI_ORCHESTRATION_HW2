@@ -21,6 +21,31 @@ def test_load_setup_config_success(tmp_path: Path) -> None:
         },
         "framing": {
             "max_frame_size_bytes": 10485760
+        },
+        "llm": {
+            "model_name": "claude-opus-4-5"
+        },
+        "debate": {
+            "format": {
+                "rebuttal_rounds": 3,
+                "word_cap": 250,
+                "first_speaker": "PRO",
+                "retry_cap": 1
+            },
+            "judge": {
+                "variant": "naive",
+                "weights": { "logic": 30, "evidence": 30, "rebuttal": 25, "persuasion": 15 }
+            },
+            "player": {
+                "best_of_N": 3,
+                "private_capture": True,
+                "ablation": {
+                    "master": False,
+                    "vectors": {},
+                    "baseline_mode": "beta"
+                }
+            },
+            "match": { "motion": "AI is beneficial", "evidence_pack": "pack_001", "seed": 42 }
         }
     }
     config_file = tmp_path / "setup.json"
@@ -33,6 +58,8 @@ def test_load_setup_config_success(tmp_path: Path) -> None:
     assert config.network.port == 9000
     assert config.game.move_timeout_seconds == 10.0
     assert config.framing.max_frame_size_bytes == 10485760
+    assert config.llm.model_name == "claude-opus-4-5"
+    assert config.debate.format.rebuttal_rounds == 3
 
 def test_load_setup_config_version_mismatch(tmp_path: Path) -> None:
     config_data = {
@@ -49,6 +76,31 @@ def test_load_setup_config_version_mismatch(tmp_path: Path) -> None:
         },
         "framing": {
             "max_frame_size_bytes": 10485760
+        },
+        "llm": {
+            "model_name": "claude-opus-4-5"
+        },
+        "debate": {
+            "format": {
+                "rebuttal_rounds": 3,
+                "word_cap": 250,
+                "first_speaker": "PRO",
+                "retry_cap": 1
+            },
+            "judge": {
+                "variant": "naive",
+                "weights": { "logic": 30, "evidence": 30, "rebuttal": 25, "persuasion": 15 }
+            },
+            "player": {
+                "best_of_N": 3,
+                "private_capture": True,
+                "ablation": {
+                    "master": False,
+                    "vectors": {},
+                    "baseline_mode": "beta"
+                }
+            },
+            "match": { "motion": "AI is beneficial", "evidence_pack": "pack_001", "seed": 42 }
         }
     }
     config_file = tmp_path / "setup.json"

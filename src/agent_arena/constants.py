@@ -37,6 +37,7 @@ FLAG_MALFORMED = "malformed"
 FLAG_CONCESSION = "concession"
 FLAG_TIMEOUT = "timeout"
 FLAG_RETRY_EXHAUSTED = "retry_exhausted"
+FLAG_OFF_TOPIC = "off_topic"
 
 # Terminated-reason tokens (8.3, 8.6 — RG2.2)
 TERMINATED_DISCONNECT = "disconnect"
