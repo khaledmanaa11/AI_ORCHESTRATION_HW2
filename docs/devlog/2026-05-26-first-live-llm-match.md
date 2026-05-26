@@ -153,12 +153,41 @@ Gate after: `ruff` clean, **272 passed**, coverage **94.19%**.
 
 Re-ran with `--move-timeout 300` (so a turn can absorb the ~22s throttle waits). The
 backoff now waits out each per-minute window instead of aborting. This run is slow by
-design — at 10 calls/min with ~40 calls, a single match takes several minutes.
+design — at 10 calls/min with ~40 calls, a single match takes several minutes. Full log:
+[`captures/run4-referee-final.log`](captures/run4-referee-final.log).
 
-_(Result appended below once the match completes — see
-[`captures/run4-referee-final.log`](captures/run4-referee-final.log).)_
+**The per-minute fix worked.** The referee hit a 429 burst and then *recovered* — the
+money line:
 
-<!-- RUN4_RESULT -->
+```
+... 5× 200 OK ...
+429 Too Many Requests
+429 Too Many Requests
+429 Too Many Requests
+200 OK                 <-- backoff waited out the window and continued (Run 3 died right here)
+```
+
+We got **further than any previous run** — several turns deep into the real debate.
+
+**But then we hit the hard ceiling.** PlayerB ran out of road first:
+
+```
+ERROR: Player agent PlayerB exception: Failed after 6 attempts: 429 RESOURCE_EXHAUSTED
+limit: 20, model: gemini-2.5-flash-lite
+quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier   <-- PER DAY again
+Please retry in 58.5s
+Player PlayerB finished
+```
+
+Between the referee + PlayerA + PlayerB we'd burned all **20 of the project's daily
+requests**. PlayerB exhausted its retries and disconnected; the referee was left spinning
+on ~59s daily-quota backoffs and was stopped manually. **No clean 10-turn debate today.**
+
+The lesson is clean: the *code* is correct now — the per-minute fix demonstrably works —
+but the free tier's **20-requests-per-day** cap simply cannot fund a single full
+LLM-referee match (~40 calls). Pacing can't fix a per-day ceiling. To actually complete a
+debate we need one of: enable billing, use a model with a higher daily cap, run the
+**simple referee + Best-of-N=1** (far fewer calls), or split the match across keys/days.
 
 ---
 

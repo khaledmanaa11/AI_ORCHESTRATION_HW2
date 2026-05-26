@@ -1,13 +1,34 @@
 # Run 4 — full LLM match — AFTER backoff fix (commit f1cc665), new key, locked motion
 # Command: uv run referee --config config/setup.json --brain llm --move-timeout 300 --show-transcript
-# Outcome: IN PROGRESS at time of first commit. The backoff fix is visibly working —
-#          it hit a 429 at call 6 and waited out the per-minute window instead of aborting
-#          (contrast Run 3, which gave up after 1-2s). Slow by design (~10 calls/min).
-# Final verdict appended once the match completes.
+# Outcome: GOT FURTHER THAN ANY PRIOR RUN. The per-minute backoff fix worked — the referee
+#          recovered from 429 bursts and kept going (see the 200 OK after the 429 burst below).
+#          But we then hit the HARD ceiling: the free-tier DAILY cap (20/day) was exhausted
+#          across referee + PlayerA + PlayerB. PlayerB ran out of retries and disconnected;
+#          the referee was left spinning on ~59s daily-quota backoffs and was stopped manually.
+# Net: NO clean 10-turn debate today. The per-day cap cannot be paced around in code.
 
+# --- referee ---
 INFO:agent_arena.shared.transport.tcp_server:TcpServer listening on 127.0.0.1:9000
 INFO:agent_arena.shared.transport.tcp_server:Accepted connection 1/2 from ('127.0.0.1', 56742)
 INFO:agent_arena.shared.transport.tcp_server:Accepted connection 2/2 from ('127.0.0.1', 56743)
 INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"   (x5)
 INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
-# <-- backoff now sleeps ~22s and continues (no abort). Match still running.
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"   <-- BACKOFF RECOVERED, continued (Run 3 died here)
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+# referee then stuck on daily-cap (20/day) backoffs after PlayerB dropped; stopped manually.
+
+# --- PlayerB (the one that ran out first) ---
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"   (x1)
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"  (x6)
+ERROR:agent_arena.services.player.agent:Player agent PlayerB exception:
+    Failed after 6 attempts: 429 RESOURCE_EXHAUSTED.
+    limit: 20, model: gemini-2.5-flash-lite
+    quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier   <-- PER DAY (the hard ceiling)
+    Please retry in 58.513896302s.
+Player PlayerB finished
+
+# CONCLUSION: code is correct; the free tier (20 req/day) simply cannot fund one full match.
+# To finish a clean debate: enable billing, use a higher-daily-cap model, or split calls
+# across keys/days. Best-of-N=1 + simple referee would also stretch the per-day budget.
