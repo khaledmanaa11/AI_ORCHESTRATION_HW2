@@ -11,17 +11,17 @@
 
 ## ⚡ NEXT-SESSION HANDOFF (pick up here)
 
-**Completed so far:** Modules A → G (commits a4b4aaf → 761b4f4).
-**Current gate result:** ruff=0 violations, 226/226 tests pass, coverage = **97%**.
+**Completed so far:** Modules A → H (commits a4b4aaf → 761b4f4 + 35934b5).
+**Current gate result:** ruff=0 violations, 230/230 tests pass, coverage = **95.55%**.
 
-**Start next session with Module H** — implement:
+**Start next session with Module I** — implement:
 
-### Module H — HARD GATE (`test(integration/debate-loop)`)
-- `tests/integration/test_debate_loop.py` — real `DebateEngine` + `SimpleRefereeBrain` + 2 seeded players over localhost → deterministic `GAME_OVER`.
-- Same seed run twice → byte-identical `final_state.verdict`.
-- Fault injection: kill player mid-match → tagged forced verdict.
+### Module I — LLM referee brain (Phase 7)
+- Swap-in real LLM referee brain over same `decide()` interface.
+- 3-arm judge variant strategies.
+- Verify grounding/Evidence check under Arm-3.
 
-**Build order reminder:** G → H (gate) → I → J. Commit after each module passes gate.
+**Build order reminder:** H (gate) → I → J. Commit after each module passes gate.
 
 ---
 
@@ -362,15 +362,15 @@
 ## Module H — Integration gate (T6.3) → the hard gate
 
 ### H1 — Seeded placeholder player (FR-SB8, T5.2)
-- [ ] **RH1.1** Implement/parameterize a **seeded or canned** Phase-1 player brain (fixed-seed utterances), not entropy-random.
+- [x] **RH1.1** Implement/parameterize a **seeded or canned** Phase-1 player brain (fixed-seed utterances), not entropy-random.
   - *DoD:* same seed ⇒ identical utterances run-to-run (FR-SB8, 9.h).
 
 ### H2 — End-to-end test (R-AC5, R-AC4, R-AC6)
-- [ ] **RH2.1** `tests/integration/test_debate_loop.py`: real referee + 2 players over localhost run the **real `DebateEngine`** + `SimpleRefereeBrain` through `REGISTER→…→GAME_OVER`.
+- [x] **RH2.1** `tests/integration/test_debate_loop.py`: real referee + 2 players over localhost run the **real `DebateEngine`** + `SimpleRefereeBrain` through `REGISTER→…→GAME_OVER`.
   - *DoD:* AC3 reproducible; one verdict; passes in CI (R-AC5, 9.i).
-- [ ] **RH2.2** Run the match twice at the same seed; assert byte-identical `final_state.verdict`.
+- [x] **RH2.2** Run the match twice at the same seed; assert byte-identical `final_state.verdict`.
   - *DoD:* determinism anchor holds (R-AC4).
-- [ ] **RH2.3** Fault-injection integration: kill a player mid-match → tagged forced verdict; timeout a turn → penalized skip.
+- [x] **RH2.3** Fault-injection integration: kill a player mid-match → tagged forced verdict; timeout a turn → penalized skip.
   - *DoD:* each still reaches exactly one `GAME_OVER` (R-AC6, 8.6).
 
 ---
@@ -461,7 +461,7 @@
 | 5 | E1–E8 | `feat(referee/game-loop)`        | retry/timeout/disconnect/invariant tests green | ✅ bc00e69 |
 | 6 | F1–F5 | `feat(referee/match-setup)`      | game_config + pre-start abort tests green | ✅ de73d5c |
 | 7 | G1–G3 | `feat(config/debate)`            | config load + validation green | ✅ 761b4f4 |
-| 8 | H1–H2 | `test(integration/debate-loop)`  | **HARD GATE — real DebateEngine → reproducible GAME_OVER** | ⏳ |
+| 8 | H1–H2 | `test(integration/debate-loop)`  | **HARD GATE — real DebateEngine → reproducible GAME_OVER** | ✅ 35934b5 |
 | 9 | I1–I3 | `feat(referee/llm-brain)`        | swap-only; AC9 still holds | ⏳ |
 | 10| J1–J4 | `feat(experiment/harness)`       | sweep + notebook run end-to-end | ⏳ |
 

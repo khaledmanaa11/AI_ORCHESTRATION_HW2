@@ -42,3 +42,48 @@ class InMemoryChannel(Channel):
         q_a: queue.Queue = queue.Queue()
         q_b: queue.Queue = queue.Queue()
         return cls(q_a, q_b), cls(q_b, q_a)
+
+
+class FramedChannel(Channel):
+    """Channel decorator that implements length-prefix framing (T2.2)."""
+
+    def __init__(self, inner: Channel, max_bytes: int = 10485760) -> None:
+        self._inner = inner
+        self._max_bytes = max_bytes
+        self._read_buffer = bytearray()
+
+    def send(self, data: bytes) -> None:
+        from agent_arena.shared.transport.framing import send_frame
+        send_frame(self._inner, data)
+
+    def recv(self) -> bytes:
+        import struct
+        header_size = 4
+        while len(self._read_buffer) < header_size:
+            chunk = self._inner.recv()
+            if not chunk:
+                raise ConnectionClosedError("peer closed connection mid-frame")
+            self._read_buffer.extend(chunk)
+
+        (payload_length,) = struct.unpack(">I", bytes(self._read_buffer[:header_size]))
+        if payload_length > self._max_bytes:
+            from agent_arena.shared.transport.framing import FrameTooLargeError
+            raise FrameTooLargeError(
+                f"frame declares {payload_length} bytes; max is {self._max_bytes}"
+            )
+
+        total_size = header_size + payload_length
+        while len(self._read_buffer) < total_size:
+            chunk = self._inner.recv()
+            if not chunk:
+                raise ConnectionClosedError("peer closed connection mid-frame")
+            self._read_buffer.extend(chunk)
+
+        payload = bytes(self._read_buffer[header_size:total_size])
+        self._read_buffer = self._read_buffer[total_size:]
+        return payload
+
+    def close(self) -> None:
+        if hasattr(self._inner, "close"):
+            self._inner.close()
+
