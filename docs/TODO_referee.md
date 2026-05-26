@@ -11,7 +11,7 @@
 
 ## ⚡ NEXT-SESSION HANDOFF (pick up here)
 
-**Completed so far:** Modules A → H (commits a4b4aaf → 761b4f4 + 35934b5).
+**Completed so far:** Modules A → H (commits a4b4aaf → 761b4f4 + 0e9434a).
 **Current gate result:** ruff=0 violations, 230/230 tests pass, coverage = **95.55%**.
 
 **Start next session with Module I** — implement:
@@ -461,7 +461,7 @@
 | 5 | E1–E8 | `feat(referee/game-loop)`        | retry/timeout/disconnect/invariant tests green | ✅ bc00e69 |
 | 6 | F1–F5 | `feat(referee/match-setup)`      | game_config + pre-start abort tests green | ✅ de73d5c |
 | 7 | G1–G3 | `feat(config/debate)`            | config load + validation green | ✅ 761b4f4 |
-| 8 | H1–H2 | `test(integration/debate-loop)`  | **HARD GATE — real DebateEngine → reproducible GAME_OVER** | ✅ 35934b5 |
+| 8 | H1–H2 | `test(integration/debate-loop)`  | **HARD GATE — real DebateEngine → reproducible GAME_OVER** | ✅ 0e9434a |
 | 9 | I1–I3 | `feat(referee/llm-brain)`        | swap-only; AC9 still holds | ⏳ |
 | 10| J1–J4 | `feat(experiment/harness)`       | sweep + notebook run end-to-end | ⏳ |
 
