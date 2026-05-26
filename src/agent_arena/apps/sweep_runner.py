@@ -26,13 +26,17 @@ def run_single_match(
     pro_master: bool,
     con_master: bool,
     ref_brain: Any,
+    player_brain_choice: str = "seeded",
+    move_timeout_seconds: float | None = None,
 ) -> Any:
     """Run a single match and return final state, exceptions, and match_id."""
     cfg = copy.deepcopy(config)
     cfg.network.port = 0
     cfg.network.connect_timeout_seconds = 1.0
     cfg.network.read_timeout_seconds = 2.0
-    cfg.game.move_timeout_seconds = 2.0
+    cfg.game.move_timeout_seconds = move_timeout_seconds or (
+        2.0 if player_brain_choice == "seeded" else max(cfg.game.move_timeout_seconds, 60.0)
+    )
     cfg.debate.judge.variant = judge_variant
     cfg.debate.match.seed = seed
     cfg.debate.match.results_dir = "results"
@@ -44,7 +48,7 @@ def run_single_match(
 
     def launch_player(pid: str, p_seed: int, is_master: bool) -> None:
         p_cfg = copy.deepcopy(cfg)
-        p_cfg.debate.player.brain_choice = "seeded"  # Default/mocked setup
+        p_cfg.debate.player.brain_choice = player_brain_choice
         p_cfg.debate.player.ablation.master = is_master
         p_cfg.debate.player.ablation.vectors = (
             dict.fromkeys(p_cfg.debate.player.ablation.vectors, True) if is_master else {}
@@ -124,7 +128,12 @@ def write_streams(
         }) + "\n")
 
 
-def run_sweep(config_path: str, k: int, offline: bool = True) -> None:
+def run_sweep(
+    config_path: str,
+    k: int,
+    offline: bool = True,
+    move_timeout_seconds: float | None = None,
+) -> None:
     """Run full sweep study over parameters (RJ2.1)."""
     config = load_setup_config(config_path)
     ref_brain = SimpleRefereeBrain() if offline else LLMRefereeBrain()
@@ -133,13 +142,20 @@ def run_sweep(config_path: str, k: int, offline: bool = True) -> None:
 
     for variant in ["naive", "hardened", "structural"]:
         for seed in range(1, k + 1):
+            player_brain_choice = "seeded" if offline else "llm"
             # Match 1: PRO is ON, CON is OFF
-            st1, exc1 = run_single_match(config, variant, seed, True, False, ref_brain)
+            st1, exc1 = run_single_match(
+                config, variant, seed, True, False, ref_brain,
+                player_brain_choice, move_timeout_seconds
+            )
             if not exc1:
                 write_streams(results_dir, st1, seed, variant, True, False)
 
             # Match 2: PRO is OFF, CON is ON
-            st2, exc2 = run_single_match(config, variant, seed, False, True, ref_brain)
+            st2, exc2 = run_single_match(
+                config, variant, seed, False, True, ref_brain,
+                player_brain_choice, move_timeout_seconds
+            )
             if not exc2:
                 write_streams(results_dir, st2, seed, variant, False, True)
 
@@ -148,5 +164,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config/setup.json")
     parser.add_argument("-k", type=int, default=10)
+    parser.add_argument("--real", action="store_true", help="Use Gemini referee and player brains")
+    parser.add_argument("--move-timeout", type=float, default=None)
     args = parser.parse_args()
-    run_sweep(args.config, args.k, offline=True)
+    run_sweep(args.config, args.k, offline=not args.real, move_timeout_seconds=args.move_timeout)

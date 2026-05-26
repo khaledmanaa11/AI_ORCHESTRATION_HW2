@@ -4,7 +4,7 @@
 matches** across three independent OS processes that communicate over TCP. A **Referee**
 process manages game state and role assignment; two **Player** processes connect, receive
 their roles, and play. Every agent has a swappable **Brain** — placeholder in Phase 1,
-LLM-backed (Anthropic) in Phase 2.
+LLM-backed (Gemini) in Phase 2.
 
 ---
 
@@ -33,9 +33,9 @@ cd AI_ORCHESTRATION_HW2
 # 2. Install all dependencies (creates .venv automatically)
 uv sync
 
-# 3. (Phase 2 only) Set your Anthropic API key
+# 3. (Phase 2 only) Set your Gemini API key
 cp .env-example .env
-# Edit .env and set ANTHROPIC_API_KEY=<your key>
+# Edit .env and set GOOGLE_API_KEY=<your key>
 ```
 
 ---
@@ -47,17 +47,26 @@ cp .env-example .env
 
 ### Start the Referee
 ```bash
-uv run referee --config config/setup.json
+uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript
 ```
 
 ### Start Player A
 ```bash
-uv run player --config config/setup.json --name PlayerA
+uv run player --config config/setup.json --name PlayerA --brain llm
 ```
 
 ### Start Player B (in a separate terminal)
 ```bash
-uv run player --config config/setup.json --name PlayerB
+uv run player --config config/setup.json --name PlayerB --brain llm
+```
+
+For a cheap local smoke test, use `--brain simple` on the referee and `--brain seeded`
+on both players. Real Gemini runs should use `--move-timeout 60` or higher so player
+LLM calls have time to finish.
+
+### Run a Sweep
+```bash
+uv run python -m agent_arena.apps.sweep_runner --config config/setup.json -k 1 --real
 ```
 
 ### Run Tests
@@ -95,7 +104,7 @@ All operational values live in `config/setup.json`. No hardcoded values appear i
 | `game.lobby_timeout_seconds` | float | `30.0` | Maximum wait for all players to register; expired lobby closes gracefully |
 | `game.heartbeat_interval_seconds` | float | `5.0` | Interval between keep-alive heartbeat messages |
 | `framing.max_frame_size_bytes` | int | `10485760` | Maximum TCP frame payload size (10 MiB) |
-| `llm.model_name` | string | `"claude-opus-4-5"` | Anthropic model used by LLM brains in Phase 2 |
+| `llm.model_name` | string | `"gemini-2.0-flash"` | Gemini model used by LLM brains in Phase 2 |
 
 Logging is configured separately in `config/logging_config.json`.
 

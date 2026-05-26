@@ -4,6 +4,7 @@ import time
 from typing import TypeVar
 
 import google.generativeai as genai
+from dotenv import load_dotenv
 from google.api_core.exceptions import InternalServerError, ResourceExhausted, RetryError
 from pydantic import BaseModel
 
@@ -23,6 +24,7 @@ class LLMClient:
     """Wrapper for LLM SDK (configured for Gemini)."""
 
     def __init__(self):
+        load_dotenv()
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY environment variable is not set")

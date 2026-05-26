@@ -48,6 +48,7 @@ class TcpClient:
                 )
                 time.sleep(wait)
                 continue
+            sock.settimeout(None)
             self._sock = sock
             logger.info("Connected to %s:%d", self._host, self._port)
             return TcpChannel(sock)

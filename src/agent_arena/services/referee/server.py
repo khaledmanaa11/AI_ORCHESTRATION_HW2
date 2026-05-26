@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import threading
 import uuid
+from pathlib import Path
 from typing import Any
 
 from agent_arena.services.game.debate_state import DebateState
@@ -137,6 +138,7 @@ class RefereeServer:
                 rubric={"weights": self.config.debate.judge.weights},
                 evidence_pack=evidence_pack,
                 judge_variant=self.config.debate.judge.variant,
+                results_dir=Path(self.config.debate.match.results_dir),
             )
             self.final_state = loop.run()
         except Exception as e:
