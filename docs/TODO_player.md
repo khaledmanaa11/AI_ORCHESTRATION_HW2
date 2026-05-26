@@ -12,9 +12,9 @@
 ## ⚡ NEXT-SESSION HANDOFF (pick up here)
 
 **Sibling triplet (referee) complete:** Modules A → I.5 (latest `0053d55`, pushed).
-**This triplet (player arsenal) status:** Module P0 completed.
+**This triplet (player arsenal) status:** Module P1 completed.
 
-**Start with Module P1** — player-brain contract (`services/player/brain/base.py`). Then P2 → P7 in order.
+**Start with Module P2** — single prompt builder (`services/player/brain/player_prompts.py`). Then P3 → P7 in order.
 
 **Build order reminder:** `P0 → P1 → P2 → P3 → P4 → P5 → P6 → P7`, K asserted after every phase.
 Commit after each phase passes the gate. One phase per commit; developer never pushes.
@@ -48,20 +48,20 @@ Commit after each phase passes the gate. One phase per commit; developer never p
 
 ---
 
-## Module P1 — Player-brain contract · `services/player/brain/base.py` (FR-PB) `[4a]`  `[ ]`
+## Module P1 — Player-brain contract · `services/player/brain/base.py` (FR-PB) `[4a]`  `[x]`
 
 ### P1.1 — Dataclasses
-- [ ] **RP1.1** Define frozen `PlayerContext` with the FR-PB2 fields (state, legal_moves, rubric,
+- [x] **RP1.1** Define frozen `PlayerContext` with the FR-PB2 fields (state, legal_moves, rubric,
   evidence_pack, side, ablation, scratchpad, seed).
   - *DoD:* immutable; carries no wire-only concerns.
-- [ ] **RP1.2** Define `PlayerDecision` = `{move: dict, trace: dict}` (move = `{"text": ...}`).
+- [x] **RP1.2** Define `PlayerDecision` = `{move: dict, trace: dict}` (move = `{"text": ...}`).
   - *DoD:* `move` holds exactly one public field (PL-AC1 / `[5.7a]`).
 
 ### P1.2 — Abstract base + placeholder conformance
-- [ ] **RP1.3** Define abstract `PlayerBrain` with `@abstractmethod generate(context)->PlayerDecision`;
+- [x] **RP1.3** Define abstract `PlayerBrain` with `@abstractmethod generate(context)->PlayerDecision`;
   stateless (no mutable attrs) (FR-PB1).
   - *DoD:* instantiating the ABC raises; subclasses must implement `generate`.
-- [ ] **RP1.4** Adapt `SeededPlayerBrain` `[RH1.1]` to subclass `PlayerBrain.generate` (deterministic
+- [x] **RP1.4** Adapt `SeededPlayerBrain` `[RH1.1]` to subclass `PlayerBrain.generate` (deterministic
   text, empty trace) (FR-PB4).
   - *DoD:* same seed ⇒ identical output; existing seeded tests still pass.
 
@@ -191,7 +191,7 @@ Commit after each phase passes the gate. One phase per commit; developer never p
 | Step | Phase | Commit scope (suggested) | Gate | Status |
 |------|-------|--------------------------|------|--------|
 | 1 | P0 | `refactor(shared/llm-client)` | referee suite green; protocol diff empty | ✅ |
-| 2 | P1 | `feat(player/brain-base)` | ABC + dataclass + seeded conformance tests green | ⏳ |
+| 2 | P1 | `feat(player/brain-base)` | ABC + dataclass + seeded conformance tests green | ✅ |
 | 3 | P2 | `feat(player/prompts)` | section-assembly + OFF≠ON + α tests green | ⏳ |
 | 4 | P3 | `feat(player/output-parser)` | valid + malformed-fallback tests green | ⏳ |
 | 5 | P4 | `feat(player/selector)` | both modes + tie-break tests green | ⏳ |

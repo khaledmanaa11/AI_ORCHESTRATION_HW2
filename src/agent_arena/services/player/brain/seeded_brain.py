@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import random
 
+from agent_arena.services.player.brain.base import PlayerBrain, PlayerContext, PlayerDecision
 
-class SeededPlayerBrain:
+
+class SeededPlayerBrain(PlayerBrain):
     """Deterministic, seeded placeholder player brain.
 
     Guarantees same seed ⇒ identical utterances run-to-run.
@@ -24,3 +26,11 @@ class SeededPlayerBrain:
         adj = state_rng.choice(adjectives)
         noun = state_rng.choice(nouns)
         return f"This is a {adj} {noun} from {self.side} under seed {self.seed} at turn {turn_number}."
+
+    def generate(self, context: PlayerContext) -> PlayerDecision:
+        """Generate a decision deterministically from the context."""
+        self.seed = context.seed
+        self.side = context.side
+        turn_number = context.state.get("turn_number", 0) + 1
+        utterance = self.generate_utterance(turn_number)
+        return PlayerDecision(move={"text": utterance}, trace={})
