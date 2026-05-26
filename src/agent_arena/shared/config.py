@@ -28,6 +28,7 @@ class FramingConfig(BaseModel):
 class LLMConfig(BaseModel):
     provider: str = Field("google", description="LLM provider name")
     model_name: str = Field(..., description="LLM model identifier used by brains")
+    generation_seed: int | None = Field(None, description="LLM generation seed")
 
 # ── Debate config submodels (Module G) ──────────────────────────────
 
@@ -58,11 +59,24 @@ class DebatePlayerConfig(BaseModel):
     best_of_N: int = 3  # noqa: N815
     private_capture: bool = True
     ablation: DebateAblationConfig = DebateAblationConfig()
+    brain_choice: str = "seeded"
+    temperature: float = 0.7
+    top_p: float = 0.9
+    persona_set: dict[str, str] = Field(default_factory=dict)
+    selector_weights: dict[str, float] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_brain_choice(self) -> "DebatePlayerConfig":
+        if self.brain_choice not in {"seeded", "llm"}:
+            raise ValueError(f"unknown brain choice: {self.brain_choice}")
+        return self
 
 class DebateMatchConfig(BaseModel):
     motion: str
     evidence_pack: str
     seed: int
+    run_id: str = "run_001"
+    results_dir: str = "results"
 
 class DebateConfig(BaseModel):
     format: DebateFormatConfig = DebateFormatConfig()

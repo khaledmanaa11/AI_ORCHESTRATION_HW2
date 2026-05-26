@@ -404,32 +404,32 @@
 
 ---
 
-## Module J — Experiment harness (S8) → TC.8
+## Module J — Experiment harness (S8) → TC.8  `[x]`
 
 ### J1 — Evidence pack & motion (4f, 8.14)
-- [ ] **RJ1.1** Curate the locked primary motion (L2) + its fixed evidence pack (~10–20 real source-snippets, mixed, serving both sides) in `data/`.
+- [x] **RJ1.1** Curate the locked primary motion (L2) + its fixed evidence pack (~10–20 real source-snippets, mixed, serving both sides) in `data/`.
   - *DoD:* deterministic across conditions; same pack to both players (4f).
-- [ ] **RJ1.2** (Optional) 1–2 additional motions + packs for external validity (8.14).
+- [x] **RJ1.2** (Optional) 1–2 additional motions + packs for external validity (8.14).
   - *DoD:* pool loads by `motion`/`evidence_pack` id.
 
 ### J2 — Sweep runner (FR-EX1, FR-EX2, FR-EX3, FR-EX6)
-- [ ] **RJ2.1** Thin runner iterating cells: ablation `master` ON/OFF × `judge.variant` ∈ {naive,hardened,structural} × K seed-locked mirror pairs (default K=10) — all from the config block, **no per-condition source edit**.
+- [x] **RJ2.1** Thin runner iterating cells: ablation `master` ON/OFF × `judge.variant` ∈ {naive,hardened,structural} × K seed-locked mirror pairs (default K=10) — all from the config block, **no per-condition source edit**.
   - *DoD:* a cell change is config/CLI only (R-AC10, 8.13).
-- [ ] **RJ2.2** Mirror pair: for each seed run the paired match with `first_speaker` flipped + ON/OFF swapped; average win-rate over the pair.
+- [x] **RJ2.2** Mirror pair: for each seed run the paired match with `first_speaker` flipped + ON/OFF swapped; average win-rate over the pair.
   - *DoD:* position bias nets out in the headline (FR-EX2, 8.8).
-- [ ] **RJ2.3** Per-vector teardown mode: one-at-a-time-ON from the OFF baseline vs the naive judge; secondary leave-one-out from full-ON.
+- [x] **RJ2.3** Per-vector teardown mode: one-at-a-time-ON from the OFF baseline vs the naive judge; secondary leave-one-out from full-ON.
   - *DoD:* the runner emits a labeled cell per vector (FR-EX3, 8.9).
 
 ### J3 — Results streams (FR-EX4)
-- [ ] **RJ3.1** Define 3 `results/` JSONL streams sharing keys `(match_id, seed, turn_number)`: (a) verdict+trajectory, (b) player private-capture, (c) match metadata (condition cell, mirror-pair id, first_speaker, terminated_reason, motion/pack ids).
+- [x] **RJ3.1** Define 3 `results/` JSONL streams sharing keys `(match_id, seed, turn_number)`: (a) verdict+trajectory, (b) player private-capture, (c) match metadata (condition cell, mirror-pair id, first_speaker, terminated_reason, motion/pack ids).
   - *DoD:* the streams join cleanly (FR-EX4, 8.10).
 
 ### J4 — Analysis notebook (FR-EX5, FR-EX7)
-- [ ] **RJ4.1** `notebooks/` analysis: defense-strength curve (win-rate vs 3 arms).
+- [x] **RJ4.1** `notebooks/` analysis: defense-strength curve (win-rate vs 3 arms).
   - *DoD:* renders the curve (FR-EX1).
-- [ ] **RJ4.2** READ-accuracy partial correlation with win/margin controlling for tool-use count.
+- [x] **RJ4.2** READ-accuracy partial correlation with win/margin controlling for tool-use count.
   - *DoD:* computes the centerpiece "reading > spamming" statistic (FR-EX5, 8.11).
-- [ ] **RJ4.3** Position-bias flip-rate (vs the 44.8% anchor) + report H1–H5.
+- [x] **RJ4.3** Position-bias flip-rate (vs the 44.8% anchor) + report H1–H5.
   - *DoD:* each hypothesis is checkable from the logs (FR-EX7, 8.15).
 
 ---

@@ -104,3 +104,4 @@ credentials.json
 # Match logs (generated at runtime; keep the results/ folder itself)
 results/*.log
 results/*.jsonl
+results/*/*.jsonl

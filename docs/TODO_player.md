@@ -97,88 +97,88 @@ Commit after each phase passes the gate. One phase per commit; developer never p
 
 ---
 
-## Module P3 — Output parser · `services/player/brain/output_parser.py` (BS-1)  `[ ]`
+## Module P3 — Output parser · `services/player/brain/output_parser.py` (BS-1)  `[x]`
 
-- [ ] **RP3.1** `parse(raw) -> ParsedTurn{read_profile, reflexion_lesson, candidate_drafts}`.
+- [x] **RP3.1** `parse(raw) -> ParsedTurn{read_profile, reflexion_lesson, candidate_drafts}`.
   - *DoD:* well-formed JSON parses into the typed shape.
-- [ ] **RP3.2** Defensive fallback: malformed JSON / missing fields → a single safe honest draft +
+- [x] **RP3.2** Defensive fallback: malformed JSON / missing fields → a single safe honest draft +
   empty profile/lesson (never raises) `[4a(ii)]`.
   - *DoD:* a garbage string yields one legal draft, not an exception.
-- [ ] **RP3.3** Normalize each draft to `{text:str, targets:list[str]}` (default `targets=[]`).
+- [x] **RP3.3** Normalize each draft to `{text:str, targets:list[str]}` (default `targets=[]`).
   - *DoD:* drafts missing `targets` get `[]`.
 
 ---
 
-## Module P4 — Deterministic Best-of-N selector · `services/player/brain/selector.py` (FR-BN, BS-2) `[ ]`
+## Module P4 — Deterministic Best-of-N selector · `services/player/brain/selector.py` (FR-BN, BS-2) `[x]`
 
-- [ ] **RP4.1** `pick(drafts, read_profile, rubric_weights, mode, selector_weights) -> int` (pure).
+- [x] **RP4.1** `pick(drafts, read_profile, rubric_weights, mode, selector_weights) -> int` (pure).
   - *DoD:* no LLM call; deterministic.
-- [ ] **RP4.2** judge-profile mode: score = Σ_targets `susceptibility[v]·selector_weights[v]` + rubric
+- [x] **RP4.2** judge-profile mode: score = Σ_targets `susceptibility[v]·selector_weights[v]` + rubric
   term; pick max (FR-BN3 ON) `[4g]`.
   - *DoD:* the draft targeting the highest-susceptibility vector wins on a crafted case.
-- [ ] **RP4.3** rubric-quality mode: rubric-quality heuristic only, no susceptibility weighting
+- [x] **RP4.3** rubric-quality mode: rubric-quality heuristic only, no susceptibility weighting
   (FR-BN3 OFF).
   - *DoD:* susceptibility changes do not change the pick in this mode.
-- [ ] **RP4.4** Tie-break = lowest index (PL-AC7).
+- [x] **RP4.4** Tie-break = lowest index (PL-AC7).
   - *DoD:* equal scores → smallest index returned.
 
 ---
 
-## Module P5 — LLM player brain · `services/player/brain/llm_brain.py` (FR-PB, FR-PC) `[ ]`
+## Module P5 — LLM player brain · `services/player/brain/llm_brain.py` (FR-PB, FR-PC) `[x]`
 
-- [ ] **RP5.1** `LLMPlayerBrain(PlayerBrain)` takes an injected `LLMClient` + config; holds **no**
+- [x] **RP5.1** `LLMPlayerBrain(PlayerBrain)` takes an injected `LLMClient` + config; holds **no**
   match state (PL-AC6, FR-PB1).
   - *DoD:* no per-match mutable attributes.
-- [ ] **RP5.2** `generate(ctx)` = build prompt (P2) → **one** client call (PL-AC2) → parse (P3) →
+- [x] **RP5.2** `generate(ctx)` = build prompt (P2) → **one** client call (PL-AC2) → parse (P3) →
   select (P4) using mode from `bestN_judge_select` (FR-BN3).
   - *DoD:* exactly one client invocation per call (asserted with a counting fake).
-- [ ] **RP5.3** Assemble `PlayerDecision`: `move={"text": chosen.text}`; `trace` = FR-PC1 record
+- [x] **RP5.3** Assemble `PlayerDecision`: `move={"text": chosen.text}`; `trace` = FR-PC1 record
   (match_id, seed, turn_number, side, phase, read_profile, selected_vectors = chosen.targets ∩
   enabled vectors, candidate_drafts, selected_draft_index, reflexion_lesson, ablation_cell).
   - *DoD:* trace has all FR-PC1 fields + join keys (PL-AC5).
-- [ ] **RP5.4** Read `best_of_N`, temperature, top_p, generation seed, persona_set, selector_weights
+- [x] **RP5.4** Read `best_of_N`, temperature, top_p, generation seed, persona_set, selector_weights
   from config/constants — none hardcoded (PL-AC8).
   - *DoD:* a config change is reflected without code edit.
 
 ---
 
-## Module P6 — Private-capture sink · `services/player/brain/capture.py` (FR-PC, BS-5) `[ ]`
+## Module P6 — Private-capture sink · `services/player/brain/capture.py` (FR-PC, BS-5) `[x]`
 
-- [ ] **RP6.1** `dump(records, run_id, results_dir, match_id, side)` → writes
+- [x] **RP6.1** `dump(records, run_id, results_dir, match_id, side)` → writes
   `results/<run_id>/<match_id>.player_<side>.jsonl`, one JSON object per line.
   - *DoD:* file at the exact BS-5 path; line count == turns.
-- [ ] **RP6.2** Create the run directory if absent; paths from config (PL-AC8).
+- [x] **RP6.2** Create the run directory if absent; paths from config (PL-AC8).
   - *DoD:* missing dir is created; no hardcoded path.
-- [ ] **RP6.3** Gated by `private_capture` (FR-PC4).
+- [x] **RP6.3** Gated by `private_capture` (FR-PC4).
   - *DoD:* `private_capture=false` ⇒ no file written.
 
 ---
 
-## Module P7 — Agent wiring + integration · `services/player/agent.py` (FR-RX2, FR-PC2) `[ ]`
+## Module P7 — Agent wiring + integration · `services/player/agent.py` (FR-RX2, FR-PC2) `[x]`
 
 ### P7.1 — Wire the brain
-- [ ] **RP7.1** Add config/constructor-driven brain choice (seeded vs LLM); default keeps Module-H
+- [x] **RP7.1** Add config/constructor-driven brain choice (seeded vs LLM); default keeps Module-H
   (seeded) path working.
   - *DoD:* seeded integration test `[H]` still green.
-- [ ] **RP7.2** Build `PlayerContext` from `MOVE_REQUEST` + `ROLE_ASSIGN` (rubric, evidence_pack,
+- [x] **RP7.2** Build `PlayerContext` from `MOVE_REQUEST` + `ROLE_ASSIGN` (rubric, evidence_pack,
   ablation) + the agent scratchpad + seed (FR-PB2).
   - *DoD:* context carries setup data captured at ROLE_ASSIGN.
-- [ ] **RP7.3** Call `generate`, route `decision.move` to `MOVE_SUBMIT`; append
+- [x] **RP7.3** Call `generate`, route `decision.move` to `MOVE_SUBMIT`; append
   `trace.reflexion_lesson` + `read_profile` to the scratchpad (FR-RX2).
   - *DoD:* a prior lesson appears in the next turn's context.
 
 ### P7.2 — Capture lifecycle
-- [ ] **RP7.4** Buffer `decision.trace` per turn; on `GAME_OVER` call `capture.dump` (FR-PC2, BS-5).
+- [x] **RP7.4** Buffer `decision.trace` per turn; on `GAME_OVER` call `capture.dump` (FR-PC2, BS-5).
   - *DoD:* a multi-turn fake-client match produces the stream-b file with all turns.
 
 ### P7.3 — Config additions
-- [ ] **RP7.5** Add to `config/setup.json`: `debate.player.{temperature, top_p, persona_set,
+- [x] **RP7.5** Add to `config/setup.json`: `debate.player.{temperature, top_p, persona_set,
   selector_weights}`, `debate.match.{run_id, results_dir}`, `llm.generation_seed`; add validation
   (Module-G pattern) + constants tokens (PL-AC8).
   - *DoD:* config loads + validates; bad values rejected.
 
 ### P7.4 — Integration test
-- [ ] **RP7.6** End-to-end fake-client turn → `PlayerDecision{move, trace}`; assert PL-AC1/2/3/5/6
+- [x] **RP7.6** End-to-end fake-client turn → `PlayerDecision{move, trace}`; assert PL-AC1/2/3/5/6
   hold (one call, zero protocol diff, offline, trace written, brain stateless).
   - *DoD:* mirrors the Module-H referee integration test; green.
 
@@ -193,11 +193,11 @@ Commit after each phase passes the gate. One phase per commit; developer never p
 | 1 | P0 | `refactor(shared/llm-client)` | referee suite green; protocol diff empty | ✅ |
 | 2 | P1 | `feat(player/brain-base)` | ABC + dataclass + seeded conformance tests green | ✅ |
 | 3 | P2 | `feat(player/prompts)` | section-assembly + OFF≠ON + α tests green | ✅ |
-| 4 | P3 | `feat(player/output-parser)` | valid + malformed-fallback tests green | ⏳ |
-| 5 | P4 | `feat(player/selector)` | both modes + tie-break tests green | ⏳ |
-| 6 | P5 | `feat(player/llm-brain)` | one-call + trace-shape + stateless tests green | ⏳ |
-| 7 | P6 | `feat(player/capture)` | path + gating tests green | ⏳ |
-| 8 | P7 | `feat(player/agent-wiring)` | **integration: fake-client turn → decision + dumped trace** | ⏳ |
+| 4 | P3 | `feat(player/output-parser)` | valid + malformed-fallback tests green | ✅ |
+| 5 | P4 | `feat(player/selector)` | both modes + tie-break tests green | ✅ |
+| 6 | P5 | `feat(player/llm-brain)` | one-call + trace-shape + stateless tests green | ✅ |
+| 7 | P6 | `feat(player/capture)` | path + gating tests green | ✅ |
+| 8 | P7 | `feat(player/agent-wiring)` | **integration: fake-client turn → decision + dumped trace** | ✅ |
 
 The hard gate is **step 8 (P7.6)**: a full fake-client turn produces a legal `move` and an
 attributable `trace` file with zero protocol diff — proving the arsenal plugs into the existing

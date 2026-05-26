@@ -1,0 +1,51 @@
+{
+  "pack_id": "evidence_pack_primary",
+  "DOC-001": {
+    "title": "Efficiency and Reaction Speed in Automated Financial Systems",
+    "text": "Automated financial trading systems execute trades in microseconds, preventing large losses during sudden market crashes that humans cannot process in time."
+  },
+  "DOC-002": {
+    "title": "Human Cognition and Decision-Making Latency under High Stress",
+    "text": "Psychological studies show human decision-making latency increases by up to 300% under high stress, often leading to analysis paralysis or cognitive freezing."
+  },
+  "DOC-003": {
+    "title": "Algorithmic Bias and Discrimination in Machine Learning Models",
+    "text": "Data analyses demonstrate that machine learning models trained on historical data consistently propagate and amplify systemic racial and gender biases in lending and hiring."
+  },
+  "DOC-004": {
+    "title": "Systemic Vulnerability and the Flash Crash of 2010",
+    "text": "The 2010 Flash Crash was primarily triggered by high-frequency trading algorithms interacting in unforeseen feedback loops, wiping out a trillion dollars in minutes."
+  },
+  "DOC-005": {
+    "title": "The Principle of Human Accountability in Safety-Critical Domains",
+    "text": "Legal frameworks globally assert that moral and legal responsibility requires a human agent to remain 'in-the-loop' for all lethal or safety-critical decisions."
+  },
+  "DOC-006": {
+    "title": "Scalability and Cost Reduction in Large-Scale Automated Logistics",
+    "text": "Deploying autonomous decision-making agents across shipping logistics reduced operational costs by 35% and eliminated bottleneck delays caused by manual approval gates."
+  },
+  "DOC-007": {
+    "title": "Security Vulnerabilities and Adversarial Attacks on Neural Networks",
+    "text": "Deep neural networks remain highly vulnerable to adversarial perturbation attacks, where minor, imperceptible changes to inputs cause catastrophic classification errors."
+  },
+  "DOC-008": {
+    "title": "Healthcare Diagnostic Accuracy of Convolutional Neural Networks",
+    "text": "AI diagnostic models achieved a 94% accuracy rate in detecting skin cancers, matching or exceeding the performance of board-certified dermatologists."
+  },
+  "DOC-009": {
+    "title": "Autonomous Weapons Systems and Ethical Compliance in Combat",
+    "text": "Defense researchers argue that autonomous weapon systems lack the human capacity for empathy, mercy, and situational judgment required by the laws of war."
+  },
+  "DOC-010": {
+    "title": "Industrial Grid Optimization and Carbon Footprint Reduction",
+    "text": "AI agents managing smart electrical grids optimized power distribution in real-time, reducing grid-wide carbon emissions by 12% compared to human control."
+  },
+  "DOC-011": {
+    "title": "Responsibility Deficits in Delegated Autonomous Decisions",
+    "text": "Philosophical analyses highlight a 'responsibility gap' where neither the developer nor the user can be held ethically responsible for unforeseeable AI actions."
+  },
+  "DOC-012": {
+    "title": "Error Rates and Hallucinations in Modern Generative Systems",
+    "text": "Large language models continue to hallucinate factual assertions at rates between 3% and 15%, making unverified decisions highly risky for medical or legal applications."
+  }
+}

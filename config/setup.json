@@ -17,7 +17,8 @@
   },
   "llm": {
     "provider": "google",
-    "model_name": "gemini-2.0-flash"
+    "model_name": "gemini-2.0-flash",
+    "generation_seed": 42
   },
   "debate": {
     "format": {
@@ -31,7 +32,17 @@
       "weights": { "logic": 30, "evidence": 30, "rebuttal": 25, "persuasion": 15 }
     },
     "player": {
+      "brain_choice": "seeded",
       "best_of_N": 3,
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "persona_set": {},
+      "selector_weights": {
+        "sycophancy": 1.0,
+        "authority": 1.0,
+        "bandwagon": 1.0,
+        "fallacy": 1.0
+      },
       "private_capture": true,
       "ablation": {
         "master": false,
@@ -43,6 +54,12 @@
         "baseline_mode": "beta"
       }
     },
-    "match": { "motion": "AI is beneficial", "evidence_pack": "pack_001", "seed": 42 }
+    "match": {
+      "motion": "AI is beneficial",
+      "evidence_pack": "pack_001",
+      "seed": 42,
+      "run_id": "run_001",
+      "results_dir": "results"
+    }
   }
 }
