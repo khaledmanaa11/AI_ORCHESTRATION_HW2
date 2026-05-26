@@ -9,12 +9,18 @@ from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 
-class GeminiError(Exception):
-    """Custom exception for Gemini client failures."""
+
+class LLMError(Exception):
+    """Custom exception for LLM client failures."""
     pass
 
-class GeminiClient:
-    """Wrapper for google-generativeai SDK."""
+
+# Keep alias for backward compatibility or in case it's referenced
+GeminiError = LLMError
+
+
+class LLMClient:
+    """Wrapper for LLM SDK (configured for Gemini)."""
 
     def __init__(self):
         api_key = os.environ.get("GOOGLE_API_KEY")
@@ -39,25 +45,25 @@ class GeminiClient:
                 )
 
                 if not result.text:
-                    raise GeminiError("Empty response text from model.")
+                    raise LLMError("Empty response text from model.")
 
                 data = json.loads(result.text)
                 return schema.model_validate(data)
 
             except (RetryError, InternalServerError, ResourceExhausted) as e:
                 if attempt == max_retries - 1:
-                    raise GeminiError(f"Failed after {max_retries} attempts: {str(e)}") from e
+                    raise LLMError(f"Failed after {max_retries} attempts: {str(e)}") from e
                 time.sleep(1 * (attempt + 1))
             except json.JSONDecodeError as e:
-                raise GeminiError(f"Failed to parse JSON response: {str(e)}") from e
+                raise LLMError(f"Failed to parse JSON response: {str(e)}") from e
             except Exception as e:
                 if "429" in str(e) or "503" in str(e) or "500" in str(e):
                     if attempt == max_retries - 1:
-                        raise GeminiError(f"Failed after {max_retries} attempts: {str(e)}") from e
+                        raise LLMError(f"Failed after {max_retries} attempts: {str(e)}") from e
                     time.sleep(1 * (attempt + 1))
                 else:
-                    raise GeminiError(f"Unexpected error during generation: {str(e)}") from e
-        raise GeminiError("Max retries exceeded")
+                    raise LLMError(f"Unexpected error during generation: {str(e)}") from e
+        raise LLMError("Max retries exceeded")
 
     def generate_text(self, prompt: str, model_name: str) -> str:
         """Generates plain text response."""
@@ -77,13 +83,13 @@ class GeminiClient:
                 return result.text
             except (RetryError, InternalServerError, ResourceExhausted) as e:
                 if attempt == max_retries - 1:
-                    raise GeminiError(f"Failed after {max_retries} attempts: {str(e)}") from e
+                    raise LLMError(f"Failed after {max_retries} attempts: {str(e)}") from e
                 time.sleep(1 * (attempt + 1))
             except Exception as e:
                 if "429" in str(e) or "503" in str(e) or "500" in str(e):
                     if attempt == max_retries - 1:
-                        raise GeminiError(f"Failed after {max_retries} attempts: {str(e)}") from e
+                        raise LLMError(f"Failed after {max_retries} attempts: {str(e)}") from e
                     time.sleep(1 * (attempt + 1))
                 else:
-                    raise GeminiError(f"Unexpected error during generation: {str(e)}") from e
-        raise GeminiError("Max retries exceeded")
+                    raise LLMError(f"Unexpected error during generation: {str(e)}") from e
+        raise LLMError("Max retries exceeded")

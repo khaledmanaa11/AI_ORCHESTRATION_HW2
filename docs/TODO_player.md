@@ -12,10 +12,9 @@
 ## ⚡ NEXT-SESSION HANDOFF (pick up here)
 
 **Sibling triplet (referee) complete:** Modules A → I.5 (latest `0053d55`, pushed).
-**This triplet (player arsenal) status:** not started — spec just authored.
+**This triplet (player arsenal) status:** Module P0 completed.
 
-**Start with Module P0** — factor the Gemini client to `shared/llm_client.py` (pure refactor; the
-referee suite must stay green). Then P1 → P7 in order.
+**Start with Module P1** — player-brain contract (`services/player/brain/base.py`). Then P2 → P7 in order.
 
 **Build order reminder:** `P0 → P1 → P2 → P3 → P4 → P5 → P6 → P7`, K asserted after every phase.
 Commit after each phase passes the gate. One phase per commit; developer never pushes.
@@ -33,17 +32,17 @@ Commit after each phase passes the gate. One phase per commit; developer never p
 
 ---
 
-## Module P0 — Shared LLM client · `shared/llm_client.py` (BS-3)  `[ ]`
+## Module P0 — Shared LLM client · `shared/llm_client.py` (BS-3)  `[x]`
 
 ### P0.1 — Move the client
-- [ ] **RP0.1** Move `services/referee/brain/gemini_client.py` → `shared/llm_client.py` (rename class
+- [x] **RP0.1** Move `services/referee/brain/gemini_client.py` → `shared/llm_client.py` (rename class
   to `LLMClient` if currently Gemini-specific; keep the same public method signature).
   - *DoD:* file exists at the new path; old path removed.
-- [ ] **RP0.2** Update the referee import (`services/referee/brain/llm_brain.py`) to the shared path.
+- [x] **RP0.2** Update the referee import (`services/referee/brain/llm_brain.py`) to the shared path.
   - *DoD:* `grep -r gemini_client src` returns nothing; referee imports `shared.llm_client`.
 
 ### P0.2 — Keep referee green
-- [ ] **RP0.3** Run the full referee suite; fix only import paths (no behavior change).
+- [x] **RP0.3** Run the full referee suite; fix only import paths (no behavior change).
   - *DoD:* `uv run pytest -q` 0 failures; `git diff --stat` shows only import-line changes + the move.
   - *DoD:* protocol diff empty (PL-AC1).
 
@@ -191,7 +190,7 @@ Commit after each phase passes the gate. One phase per commit; developer never p
 
 | Step | Phase | Commit scope (suggested) | Gate | Status |
 |------|-------|--------------------------|------|--------|
-| 1 | P0 | `refactor(shared/llm-client)` | referee suite green; protocol diff empty | ⏳ |
+| 1 | P0 | `refactor(shared/llm-client)` | referee suite green; protocol diff empty | ✅ |
 | 2 | P1 | `feat(player/brain-base)` | ABC + dataclass + seeded conformance tests green | ⏳ |
 | 3 | P2 | `feat(player/prompts)` | section-assembly + OFF≠ON + α tests green | ⏳ |
 | 4 | P3 | `feat(player/output-parser)` | valid + malformed-fallback tests green | ⏳ |

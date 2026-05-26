@@ -13,12 +13,12 @@ from agent_arena.services.referee.brain.base import (
     RequestKind,
     aggregate_verdict,
 )
-from agent_arena.services.referee.brain.gemini_client import GeminiClient
 from agent_arena.services.referee.brain.judge_prompts import (
     build_rationale_prompt,
     build_tiebreak_prompt,
     build_turn_prompt,
 )
+from agent_arena.shared.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
 
     def __init__(self, model_name: str = "gemini-2.0-flash"):
         self._model_name = model_name
-        self._client = GeminiClient()
+        self._client = LLMClient()
 
     def decide(self, context: RefereeContext) -> RefereeDecision:
         if context.request_kind == RequestKind.EVALUATE_TURN:
