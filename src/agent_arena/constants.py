@@ -25,3 +25,19 @@ MSG_HEARTBEAT = "HEARTBEAT"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 9000
 DEFAULT_MAX_FRAME_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Debate error-code tokens (7.d, 8.4 — RG2.1)
+ERROR_ILLEGAL_MOVE = "ILLEGAL_MOVE"
+ERROR_MALFORMED_MESSAGE = "MALFORMED_MESSAGE"
+
+# Debate move-flag / reason tokens (RG2.1)
+FLAG_EMPTY = "empty"
+FLAG_OVER_LENGTH = "over_length"
+FLAG_MALFORMED = "malformed"
+FLAG_CONCESSION = "concession"
+FLAG_TIMEOUT = "timeout"
+FLAG_RETRY_EXHAUSTED = "retry_exhausted"
+
+# Terminated-reason tokens (8.3, 8.6 — RG2.2)
+TERMINATED_DISCONNECT = "disconnect"
+TERMINATED_ABORTED = "aborted"
