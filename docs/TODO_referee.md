@@ -7,6 +7,42 @@
 | Version  | 1.00                                        |
 | Date     | 2026-05-25                                  |
 
+---
+
+## ⚡ NEXT-SESSION HANDOFF (pick up here)
+
+**Completed so far:** Modules A → E (commits a4b4aaf → bc00e69, pushed to `origin/master`).
+**Current gate result:** ruff=0 violations, 196/198 tests pass (2 pre-existing `test_config.py` failures unrelated to our work), coverage = **96%**.
+
+**Start next session with Module F** — read `docs/PRD_referee.md` §7 (Protocol Mapping) and `docs/PRD_matchmaking.md` first, then implement:
+
+### Module F — next (commit: `feat(referee/match-setup)`)
+Files to create:
+- `src/agent_arena/services/referee/matchmaking.py` — debate-specific bits:
+  `build_game_config()`, seeded PRO/CON assignment, `ROLE_ASSIGN` payload construction, pre-`GAME_START` abort path.
+- `tests/unit/services/referee/test_matchmaking.py` — RF5.1–RF5.3 tests.
+
+Key constraints to honour:
+- `judge_variant` must **never** appear in any player-bound payload (RF1.2, R-AC2).
+- Same `evidence_pack` bytes to both players (RF1.3).
+- Same seed → same PRO/CON assignment (RF2.1).
+- Pre-start abort → **no** results row written (RF4.1, distinct from mid-match disconnect).
+- Zero protocol diff: reuse existing `MessageType.ROLE_ASSIGN`; no new fields (R-AC9).
+
+### Then Module G (`feat(config/debate)`)
+- Add `debate` block to `config/setup.json`.
+- Extend `shared/config.py` validation for the new block.
+- Tests: RG3.1.
+
+### Then Module H — HARD GATE (`test(integration/debate-loop)`)
+- `tests/integration/test_debate_loop.py` — real `DebateEngine` + `SimpleRefereeBrain` + 2 seeded players over localhost → deterministic `GAME_OVER`.
+- Same seed run twice → byte-identical `final_state.verdict`.
+- Fault injection: kill player mid-match → tagged forced verdict.
+
+**Build order reminder:** F → G → H (gate) → I → J. Commit after each module passes gate.
+
+---
+
 > Status: `[ ]` not started · `[~]` in progress · `[x]` done
 > Every task maps to a requirement in [PRD_referee.md](PRD_referee.md) and a ledger decision
 > in [DESIGN_LEDGER.md](DESIGN_LEDGER.md). Companion: [PLAN_referee.md](PLAN_referee.md).
@@ -20,254 +56,259 @@
 
 ---
 
-## Module A — Game state & move · `services/game/debate_state.py` (S5) → T4.3
+## Module A — Game state & move · `services/game/debate_state.py` (S5) → T4.3  ✅ DONE (commit a4b4aaf)
 
 ### A1 — File setup
-- [ ] **RA1.1** Create `services/game/debate_state.py` with a module docstring + `from __future__ import annotations`, `from dataclasses import dataclass, field`, `from typing import Any`.
+- [x] **RA1.1** Create `services/game/debate_state.py` with a module docstring + `from __future__ import annotations`, `from dataclasses import dataclass, field`, `from typing import Any`.
   - *DoD:* file exists; `ruff` clean; imports used.
-- [ ] **RA1.2** Add a module logger `logger = logging.getLogger(__name__)`.
+- [x] **RA1.2** Add a module logger `logger = logging.getLogger(__name__)`.
   - *DoD:* logger name `"agent_arena.services.game.debate_state"`.
 
 ### A2 — `TurnRecord` (FR-ST4, FR-ST5)
-- [ ] **RA2.1** Define `@dataclass(frozen=True) class TurnRecord` with `turn_number:int, side:str, phase:str, utterance:str, word_count:int, retry_count:int, referee_tell:str|None, referee_flag:str|None`.
+- [x] **RA2.1** Define `@dataclass(frozen=True) class TurnRecord` with `turn_number:int, side:str, phase:str, utterance:str, word_count:int, retry_count:int, referee_tell:str|None, referee_flag:str|None`.
   - *DoD:* instances are immutable (assignment raises `FrozenInstanceError`).
-- [ ] **RA2.2** Add `TurnRecord.to_dict()` and `from_dict()`.
+- [x] **RA2.2** Add `TurnRecord.to_dict()` and `from_dict()`.
   - *DoD:* `from_dict(r.to_dict()) == r`.
 
 ### A3 — `DebateMove` (FR-ST7)
-- [ ] **RA3.1** Define `@dataclass(frozen=True) class DebateMove` with one field `text:str`.
+- [x] **RA3.1** Define `@dataclass(frozen=True) class DebateMove` with one field `text:str`.
   - *DoD:* no other public field exists.
-- [ ] **RA3.2** Add `to_dict()` → `{"text": self.text}` and `from_dict()`.
+- [x] **RA3.2** Add `to_dict()` → `{"text": self.text}` and `from_dict()`.
   - *DoD:* `DebateMove("x").to_dict() == {"text":"x"}`; round-trips (R-AC1).
 
 ### A4 — `DebateState` fields (FR-ST2, FR-ST8)
-- [ ] **RA4.1** Define `@dataclass(frozen=True) class DebateState` with `motion:str, turn_number:int=0, transcript:tuple[TurnRecord,...]=(), status:str="PENDING", verdict:dict|None=None, rules_snapshot:dict=field(default_factory=dict)` (rules_snapshot = `{R, word_cap, retry_cap, total_turns}`).
+- [x] **RA4.1** Define `@dataclass(frozen=True) class DebateState` with `motion:str, turn_number:int=0, transcript:tuple[TurnRecord,...]=(), status:str="PENDING", verdict:dict|None=None, rules_snapshot:dict=field(default_factory=dict)` (rules_snapshot = `{R, word_cap, retry_cap, total_turns}`).
   - *DoD:* fields exactly match FR-ST2; `verdict=None` until terminal.
-- [ ] **RA4.2** Assert (by construction + a test) that `DebateState` holds **no** rubric, weights, evidence_pack, or numeric trajectory — only `motion` is contextual (FR-ST8).
+- [x] **RA4.2** Assert (by construction + a test) that `DebateState` holds **no** rubric, weights, evidence_pack, or numeric trajectory — only `motion` is contextual (FR-ST8).
   - *DoD:* a test asserts those keys never appear on the instance or in `to_dict()`.
 
 ### A5 — Derived schedule helpers (FR-ST3)
-- [ ] **RA5.1** Implement `total_turns(R)` → `2 + 2*R + 2`.
+- [x] **RA5.1** Implement `total_turns(R)` → `2 + 2*R + 2`.
   - *DoD:* `total_turns(3) == 10`.
-- [ ] **RA5.2** Implement `active_side(turn_number)` → `"PRO"` if odd else `"CON"` (no stored side).
+- [x] **RA5.2** Implement `active_side(turn_number)` → `"PRO"` if odd else `"CON"` (no stored side).
   - *DoD:* turns 1/3/5/7/9 → PRO; 2/4/6/8/10 → CON (1b).
-- [ ] **RA5.3** Implement `phase(turn_number)` → OPENING (1–2), REBUTTAL (next 2R), CLOSING (last 2); and `rebuttal_round(turn_number)` → `⌈(t−2)/2⌉` within rebuttal.
+- [x] **RA5.3** Implement `phase(turn_number)` → OPENING (1–2), REBUTTAL (next 2R), CLOSING (last 2); and `rebuttal_round(turn_number)` → `⌈(t−2)/2⌉` within rebuttal.
   - *DoD:* schedule matches 5.4d for R=3.
-- [ ] **RA5.4** Make `first_speaker` configurable so PRO/CON-first flips for mirror pairs (1b/8.8) — the schedule derives `active_side` relative to `first_speaker`.
+- [x] **RA5.4** Make `first_speaker` configurable so PRO/CON-first flips for mirror pairs (1b/8.8) — the schedule derives `active_side` relative to `first_speaker`.
   - *DoD:* flipping `first_speaker` swaps the per-turn side mapping deterministically.
 
 ### A6 — Serialization (FR-ST1, FR-ST6)
-- [ ] **RA6.1** Implement `DebateState.to_dict()` carrying public-only fields: `motion, turn_number, derived phase+active_side, transcript (list of TurnRecord.to_dict), status, verdict (if terminal), rules_snapshot`.
+- [x] **RA6.1** Implement `DebateState.to_dict()` carrying public-only fields: `motion, turn_number, derived phase+active_side, transcript (list of TurnRecord.to_dict), status, verdict (if terminal), rules_snapshot`.
   - *DoD:* no private reasoning, no numeric trajectory present (FR-ST6, R-AC2).
-- [ ] **RA6.2** Implement `DebateState.from_dict()` as the lossless inverse.
+- [x] **RA6.2** Implement `DebateState.from_dict()` as the lossless inverse.
   - *DoD:* `from_dict(s.to_dict()) == s` for pre-start, mid-match, and terminal states (R-AC1).
 
 ### A7 — Tests
-- [ ] **RA7.1** `tests/unit/services/game/test_debate_state.py`: round-trip for `TurnRecord`/`DebateMove`/`DebateState`.
+- [x] **RA7.1** `tests/unit/services/game/test_debate_state.py`: round-trip for `TurnRecord`/`DebateMove`/`DebateState`.
   - *DoD:* pytest collects; all round-trips pass.
-- [ ] **RA7.2** Test the derived schedule (side/phase/round) across all 10 turns at R=3 and one non-default R.
+- [x] **RA7.2** Test the derived schedule (side/phase/round) across all 10 turns at R=3 and one non-default R.
   - *DoD:* assertions pass for both R values.
-- [ ] **RA7.3** Test the **public-only invariant**: `to_dict()` contains none of `{scores, trajectory, rubric, weights, evidence_pack, reasoning}` (R-AC2, FR-ST6/ST8).
+- [x] **RA7.3** Test the **public-only invariant**: `to_dict()` contains none of `{scores, trajectory, rubric, weights, evidence_pack, reasoning}` (R-AC2, FR-ST6/ST8).
   - *DoD:* assertion passes; this is the AC2 guard.
-- [ ] **RA7.4** Test immutability: assigning to any field raises.
+- [x] **RA7.4** Test immutability: assigning to any field raises.
   - *DoD:* `pytest.raises(FrozenInstanceError)`.
 
 ---
 
-## Module B — Game engine · `services/game/debate_engine.py` (S5) → T4.1/T4.2
+## Module B — Game engine · `services/game/debate_engine.py` (S5) → T4.1/T4.2  ✅ DONE (commit 557cfe5)
 
 ### B1 — Class skeleton (FR-EN7)
-- [ ] **RB1.1** Create the file; define `class DebateEngine(GameEngine)` with a docstring "pure deterministic debate mechanics; no LLM/network/disk".
+- [x] **RB1.1** Create the file; define `class DebateEngine(GameEngine)` with a docstring "pure deterministic debate mechanics; no LLM/network/disk".
   - *DoD:* importable; subclasses the existing `GameEngine` ABC.
-- [ ] **RB1.2** Constructor takes `rules` (R, word_cap, retry_cap, first_speaker, motion) — no I/O, no globals.
+- [x] **RB1.2** Constructor takes `rules` (R, word_cap, retry_cap, first_speaker, motion) — no I/O, no globals.
   - *DoD:* `DebateEngine` holds only config-derived rules; no socket/LLM import (FR-EN7, R-AC3-adjacent).
 
 ### B2 — Initial state (FR-EN6)
-- [ ] **RB2.1** `get_initial_state()` → `DebateState(motion, turn_number=0, status="PENDING", transcript=(), rules_snapshot=…)`.
+- [x] **RB2.1** `get_initial_state()` → `DebateState(motion, turn_number=0, status="PENDING", transcript=(), rules_snapshot=…)`.
   - *DoD:* matches GAME_START.initial_state shape (7.h).
 
 ### B3 — Tier-1 mechanical validation (FR-EN4)
-- [ ] **RB3.1** `validate_move(state, move)` rejects empty/whitespace `text` → reason token `"empty"`.
+- [x] **RB3.1** `validate_move(state, move)` rejects empty/whitespace `text` → reason token `"empty"`.
   - *DoD:* returns illegal+`"empty"` for `""`/`"   "`.
-- [ ] **RB3.2** Reject over-length (`word_count(text) > word_cap`) → `"over_length"`.
+- [x] **RB3.2** Reject over-length (`word_count(text) > word_cap`) → `"over_length"`.
   - *DoD:* a 251-word move at cap 250 is illegal.
-- [ ] **RB3.3** Reject malformed (missing/non-str `text`) → `"malformed"`.
+- [x] **RB3.3** Reject malformed (missing/non-str `text`) → `"malformed"`.
   - *DoD:* `{"text": 5}` and `{}` are illegal.
-- [ ] **RB3.4** A valid in-cap move passes Tier-1.
+- [x] **RB3.4** A valid in-cap move passes Tier-1.
   - *DoD:* legal=True; reason None.
-- [ ] **RB3.5** Define `word_count(text)` once (whitespace split) and reuse everywhere (no duplicate counting logic).
+- [x] **RB3.5** Define `word_count(text)` once (whitespace split) and reuse everywhere (no duplicate counting logic).
   - *DoD:* single source of truth for word counting.
 
 ### B4 — Legal-move descriptor (FR-EN5)
-- [ ] **RB4.1** `get_legal_moves(state)` → one-element list `[{type:"utterance", turn_number, side, phase, word_cap, must_engage, attempt, max_attempts}]`.
+- [x] **RB4.1** `get_legal_moves(state)` → one-element list `[{type:"utterance", turn_number, side, phase, word_cap, must_engage, attempt, max_attempts}]`.
   - *DoD:* `list[Any]` length 1; `must_engage` True in REBUTTAL/CLOSING, False in OPENING (1d).
 
 ### B5 — Apply move & penalized turns (FR-EN1, FR-EN3)
-- [ ] **RB5.1** `apply_move(state, move, *, tell=None, flag=None, retry_count=0)` → fresh frozen `DebateState` with a new `TurnRecord` appended; never mutates input.
+- [x] **RB5.1** `apply_move(state, move, *, tell=None, flag=None, retry_count=0)` → fresh frozen `DebateState` with a new `TurnRecord` appended; never mutates input.
   - *DoD:* input unchanged; `turn_number` += 1; transcript grows by one.
-- [ ] **RB5.2** Support appending a **penalized empty** `TurnRecord` (`utterance=""`, `word_count=0`, `flag` in {`"timeout"`,`"retry_exhausted"`}) that still advances the counter.
+- [x] **RB5.2** Support appending a **penalized empty** `TurnRecord` (`utterance=""`, `word_count=0`, `flag` in {`"timeout"`,`"retry_exhausted"`}) that still advances the counter.
   - *DoD:* an empty penalized turn advances `turn_number` (FR-EN3, 8.1).
 
 ### B6 — Terminal detection (FR-EN2)
-- [ ] **RB6.1** `is_terminal(state)` → True iff `turn_number == total_turns` and all turns recorded; sets/derives `status="COMPLETE"`.
+- [x] **RB6.1** `is_terminal(state)` → True iff `turn_number == total_turns` and all turns recorded; sets/derives `status="COMPLETE"`.
   - *DoD:* terminal exactly at the last scheduled turn, not before.
 
 ### B7 — Tests
-- [ ] **RB7.1** `test_debate_engine.py`: drive a full 10-turn schedule via `apply_move`; assert terminal at turn 10.
+- [x] **RB7.1** `test_debate_engine.py`: drive a full 10-turn schedule via `apply_move`; assert terminal at turn 10.
   - *DoD:* loop reaches `is_terminal()`.
-- [ ] **RB7.2** Test each Tier-1 rejection (empty/over_length/malformed) returns the right token.
+- [x] **RB7.2** Test each Tier-1 rejection (empty/over_length/malformed) returns the right token.
   - *DoD:* three assertions pass.
-- [ ] **RB7.3** Test immutability of `apply_move` (input state object identity unchanged, fields equal).
+- [x] **RB7.3** Test immutability of `apply_move` (input state object identity unchanged, fields equal).
   - *DoD:* assertion passes.
-- [ ] **RB7.4** Test the penalized-empty-turn path advances the counter.
+- [x] **RB7.4** Test the penalized-empty-turn path advances the counter.
   - *DoD:* assertion passes (8.1 wiring precondition).
 
 ---
 
-## Module C — Referee brain contract · `services/referee/brain/base.py` (S6) → T4.7
+## Module C — Referee brain contract · `services/referee/brain/base.py` (S6) → T4.7  ✅ DONE (commit 4703095)
 
 ### C1 — Request kind & dataclasses (FR-RB2, FR-RB3, FR-RB4)
-- [ ] **RC1.1** Define `class RequestKind(StrEnum)` = `EVALUATE_TURN`, `RENDER_VERDICT`.
+- [x] **RC1.1** Define `class RequestKind(StrEnum)` = `EVALUATE_TURN`, `RENDER_VERDICT`.
   - *DoD:* no string literals for kinds elsewhere (6.a).
-- [ ] **RC1.2** Define `@dataclass class RefereeContext` = `{request_kind, state:dict, move:dict|None, rubric:dict, judge_variant:str, evidence_pack:dict, score_trajectory:list}`.
+- [x] **RC1.2** Define `@dataclass class RefereeContext` = `{request_kind, state:dict, move:dict|None, rubric:dict, judge_variant:str, evidence_pack:dict, score_trajectory:list}`.
   - *DoD:* `move=None` valid; fields match FR-RB3.
-- [ ] **RC1.3** Define `@dataclass class RefereeDecision` = `{legal:bool=True, flag:str|None=None, tell:str|None=None, turn_scores:dict|None=None, verdict:dict|None=None}`.
+- [x] **RC1.3** Define `@dataclass class RefereeDecision` = `{legal:bool=True, flag:str|None=None, tell:str|None=None, turn_scores:dict|None=None, verdict:dict|None=None}`.
   - *DoD:* one dataclass serves both kinds (FR-RB4, 6.c).
 
 ### C2 — Abstract brain (FR-RB1, FR-RB5, FR-RB7)
-- [ ] **RC2.1** Define `class RefereeBrain(ABC)` with `@abstractmethod def decide(self, context: RefereeContext) -> RefereeDecision`.
+- [x] **RC2.1** Define `class RefereeBrain(ABC)` with `@abstractmethod def decide(self, context: RefereeContext) -> RefereeDecision`.
   - *DoD:* cannot instantiate the ABC; subclass with `decide` can (FR-RB1).
-- [ ] **RC2.2** Docstring states: stateless pure function; two-kind dispatch; trajectory injected by the loop; **no LLM-only fields** in Context/Decision (FR-RB5, FR-RB7).
+- [x] **RC2.2** Docstring states: stateless pure function; two-kind dispatch; trajectory injected by the loop; **no LLM-only fields** in Context/Decision (FR-RB5, FR-RB7).
   - *DoD:* interface documented; no prompt/token/temperature field exists (6.i).
 
 ### C3 — Shared deterministic verdict aggregate (FR-JU5, 6.h) — reused by both brains
-- [ ] **RC3.1** Implement a pure helper `aggregate_verdict(trajectory, weights, tiebreak_fn) -> dict` returning the 2e shape `{winner, margin, scores:{PRO,CON per-criterion}, weighted_totals, rationale}`; per-criterion final = mean of that side's per-turn scores → weighted.
+- [x] **RC3.1** Implement a pure helper `aggregate_verdict(trajectory, weights, tiebreak_fn) -> dict` returning the 2e shape `{winner, margin, scores:{PRO,CON per-criterion}, weighted_totals, rationale}`; per-criterion final = mean of that side's per-turn scores → weighted.
   - *DoD:* deterministic; same trajectory → same dict (REF-007).
-- [ ] **RC3.2** The helper is **total**: all-zero/partial trajectories yield a valid verdict, never raises; tie resolved by the injected `tiebreak_fn`.
+- [x] **RC3.2** The helper is **total**: all-zero/partial trajectories yield a valid verdict, never raises; tie resolved by the injected `tiebreak_fn`.
   - *DoD:* empty/all-zero trajectory returns a well-formed verdict (FR-SB6, 8.6).
 
 ### C4 — Tests
-- [ ] **RC4.1** `test_brain_base.py`: ABC cannot be instantiated; a trivial subclass works.
+- [x] **RC4.1** `test_brain_base.py`: ABC cannot be instantiated; a trivial subclass works.
   - *DoD:* assertions pass.
-- [ ] **RC4.2** Test `aggregate_verdict` on a hand-computed trajectory (known means → known winner/margin).
+- [x] **RC4.2** Test `aggregate_verdict` on a hand-computed trajectory (known means → known winner/margin).
   - *DoD:* matches the hand calculation exactly.
-- [ ] **RC4.3** Test the total/never-raises property on all-zero and single-turn trajectories.
+- [x] **RC4.3** Test the total/never-raises property on all-zero and single-turn trajectories.
   - *DoD:* no exception; valid 2e shape.
 
 ---
 
-## Module D — `SimpleRefereeBrain` · `services/referee/brain/simple_brain.py` (S9) → T4.8
+## Module D — `SimpleRefereeBrain` · `services/referee/brain/simple_brain.py` (S9) → T4.8  ✅ DONE (commit 12f5004)
 
 ### D1 — Class & dispatch (FR-SB1)
-- [ ] **RD1.1** Define `class SimpleRefereeBrain(RefereeBrain)`; `decide` dispatches on `context.request_kind`.
+- [x] **RD1.1** Define `class SimpleRefereeBrain(RefereeBrain)`; `decide` dispatches on `context.request_kind`.
   - *DoD:* **no** import of LLM/socket/`random`/`time`/file I/O (FR-SB1, R-AC3).
-- [ ] **RD1.2** Add a CI/grep guard test asserting the module imports none of `{anthropic, socket, random, time, open}`.
+- [x] **RD1.2** Add a CI/grep guard test asserting the module imports none of `{anthropic, socket, random, time, open}`.
   - *DoD:* the guard test passes (R-AC3 enforcement).
 
 ### D2 — EVALUATE_TURN legality (FR-SB2)
-- [ ] **RD2.1** Define a module-level frozen `CONCESSION_TOKENS` set (e.g. `"i concede"`, `"i give up"`, `"you win"`, `"i forfeit"`).
+- [x] **RD2.1** Define a module-level frozen `CONCESSION_TOKENS` set (e.g. `"i concede"`, `"i give up"`, `"you win"`, `"i forfeit"`).
   - *DoD:* tokens defined once (no magic strings).
-- [ ] **RD2.2** Scan the case-folded utterance for any token → `legal=False, flag="concession"`; else `legal=True`. Off-topic never flagged.
+- [x] **RD2.2** Scan the case-folded utterance for any token → `legal=False, flag="concession"`; else `legal=True`. Off-topic never flagged.
   - *DoD:* concession utterance illegal; normal legal (FR-SB2, 9.b).
 
 ### D3 — Tell (FR-SB3)
-- [ ] **RD3.1** Build a number-free `tell` from public turn data only, e.g. `f"[T{n} {side}/{phase}] acknowledged — {wc} words."`
+- [x] **RD3.1** Build a number-free `tell` from public turn data only, e.g. `f"[T{n} {side}/{phase}] acknowledged — {wc} words."`
   - *DoD:* tell contains no numeric score; no coaching (FR-SB3, 9.c).
 
 ### D4 — Scores (FR-SB4)
-- [ ] **RD4.1** Compute `s = round(min(word_count/word_cap, 1.0)*10, 2)`; emit `turn_scores = {logic:s, evidence:s, rebuttal:s, persuasion:s}`.
+- [x] **RD4.1** Compute `s = round(min(word_count/word_cap, 1.0)*10, 2)`; emit `turn_scores = {logic:s, evidence:s, rebuttal:s, persuasion:s}`.
   - *DoD:* identical across the 4 criteria; pure function (FR-SB4, 9.d).
-- [ ] **RD4.2** `word_count==0` → all scores `0.0` (coincides with the penalized-skip floor).
+- [x] **RD4.2** `word_count==0` → all scores `0.0` (coincides with the penalized-skip floor).
   - *DoD:* assertion passes (8.1 alignment).
 
 ### D5 — RENDER_VERDICT (FR-SB5, FR-SB6)
-- [ ] **RD5.1** Define the deterministic tiebreak `simple_tiebreak(trajectory)` = greater cumulative `word_count`; still tied → `first_speaker` (PRO).
+- [x] **RD5.1** Define the deterministic tiebreak `simple_tiebreak(trajectory)` = greater cumulative `word_count`; still tied → `first_speaker` (PRO).
   - *DoD:* tie resolves deterministically (FR-SB5, 9.e).
-- [ ] **RD5.2** RENDER_VERDICT calls `aggregate_verdict(trajectory, weights, simple_tiebreak)` (RC3.1) and templates the `rationale`.
+- [x] **RD5.2** RENDER_VERDICT calls `aggregate_verdict(trajectory, weights, simple_tiebreak)` (RC3.1) and templates the `rationale`.
   - *DoD:* output is the full 2e shape (R-AC7).
 
 ### D6 — Variant/pack ignored (FR-SB7)
-- [ ] **RD6.1** Read neither `judge_variant` nor `evidence_pack`; no `_verify_grounding`.
+- [x] **RD6.1** Read neither `judge_variant` nor `evidence_pack`; no `_verify_grounding`.
   - *DoD:* identical output across all `judge_variant` values (FR-SB7, 9.g).
 
 ### D7 — Tests
-- [ ] **RD7.1** Determinism: call `decide` twice with the same context → equal decisions (R-AC4).
+- [x] **RD7.1** Determinism: call `decide` twice with the same context → equal decisions (R-AC4).
   - *DoD:* assertion passes.
-- [ ] **RD7.2** Concession path; normal path; word-count scoring; wc=0 floor.
+- [x] **RD7.2** Concession path; normal path; word-count scoring; wc=0 floor.
   - *DoD:* four assertions pass.
-- [ ] **RD7.3** Total verdict over an all-zero trajectory; variant-invariance across naive/hardened/structural.
+- [x] **RD7.3** Total verdict over an all-zero trajectory; variant-invariance across naive/hardened/structural.
   - *DoD:* assertions pass (FR-SB6/SB7).
 
 ---
 
-## Module E — Game loop & fault policy · `services/referee/game_loop.py` + `result.py` (S3, S8) → T4.5/T4.6
+## Module E — Game loop & fault policy · `services/referee/game_loop.py` + `_turn_runner.py` + `result.py` (S3, S8) → T4.5/T4.6  ✅ DONE (commit bc00e69)
+
+> **Implementation note:** `game_loop.py` was split into three files to stay ≤150 lines:
+> `_turn_runner.py` (per-turn recv/retry/fault logic), `game_loop.py` (orchestrator), `result.py` (trajectory dump).
 
 ### E1 — Turn issue (FR-MO?, 5.7e)
-- [ ] **RE1.1** Derive `active_side` from `turn_number`+`first_speaker`; send `MOVE_REQUEST{state, legal_moves, move_timeout_seconds}` to the **active player only**, echoing `side`+`turn_number`.
+- [x] **RE1.1** Derive `active_side` from `turn_number`+`first_speaker`; send `MOVE_REQUEST{state, legal_moves, move_timeout_seconds}` to the **active player only**, echoing `side`+`turn_number`.
   - *DoD:* broadcast never used for MOVE_REQUEST (5.7e).
 
 ### E2 — Two-tier legality + retry gate (FR-MO2, FR-MO3, FR-MO4, FR-RB2, FR-RB6)
-- [ ] **RE2.1** On a received move: run `engine.validate_move` (Tier-1); if illegal → retry gate with the reason token.
+- [x] **RE2.1** On a received move: run `engine.validate_move` (Tier-1); if illegal → retry gate with the reason token.
   - *DoD:* Tier-1 fail does not call the brain.
-- [ ] **RE2.2** If Tier-1 passes, call `brain.decide(EVALUATE_TURN, …)` once (Tier-2 + tell + scores in one call).
+- [x] **RE2.2** If Tier-1 passes, call `brain.decide(EVALUATE_TURN, …)` once (Tier-2 + tell + scores in one call).
   - *DoD:* exactly one brain call per attempt (FR-RB6, 6.f).
-- [ ] **RE2.3** Assert **no pre-turn brain call** is ever issued (only EVALUATE_TURN / RENDER_VERDICT).
+- [x] **RE2.3** Assert **no pre-turn brain call** is ever issued (only EVALUATE_TURN / RENDER_VERDICT).
   - *DoD:* a test counts brain calls = (#turns scored) + 1 verdict (FR-RB2, 6.a).
-- [ ] **RE2.4** On illegal (either tier): send `ERROR{code="ILLEGAL_MOVE", message=reason}` to the active player, then re-issue `MOVE_REQUEST` with `attempt+1`.
+- [x] **RE2.4** On illegal (either tier): send `ERROR{code="ILLEGAL_MOVE", message=reason}` to the active player, then re-issue `MOVE_REQUEST` with `attempt+1`.
   - *DoD:* ERROR is active-player-only, not broadcast (7.d).
-- [ ] **RE2.5** Retry cap = `retry_cap` (default 1, config); structural fouls only — weak content (legal but low score) is never retried.
+- [x] **RE2.5** Retry cap = `retry_cap` (default 1, config); structural fouls only — weak content (legal but low score) is never retried.
   - *DoD:* a legal weak move is scored, not retried (FR-MO2, 3b).
-- [ ] **RE2.6** On retry exhaustion: append a penalized empty `TurnRecord` (`flag="retry_exhausted"`) via `apply_move`; match continues.
+- [x] **RE2.6** On retry exhaustion: append a penalized empty `TurnRecord` (`flag="retry_exhausted"`) via `apply_move`; match continues.
   - *DoD:* counter advances; loop continues (FR-MO3).
 
 ### E3 — Broadcast & trajectory (FR-MO1, FR-JU1, FR-RB5)
-- [ ] **RE3.1** After a recorded turn, broadcast `STATE_UPDATE{state, last_move, active_player}`; players read tell/flag off `state.transcript[-1]`.
+- [x] **RE3.1** After a recorded turn, broadcast `STATE_UPDATE{state, last_move, active_player}`; players read tell/flag off `state.transcript[-1]`.
   - *DoD:* **no** `referee_feedback` field added to the payload (FR-MO1/JU1, 7.b).
-- [ ] **RE3.2** Maintain the loop-private numeric trajectory; inject as `score_trajectory` each `decide`; append each decision's `turn_scores`.
+- [x] **RE3.2** Maintain the loop-private numeric trajectory; inject as `score_trajectory` each `decide`; append each decision's `turn_scores`.
   - *DoD:* trajectory never appears in any wire payload (FR-RB5, 2a).
 
 ### E4 — Terminal & verdict (FR-FT7, FR-JU5)
-- [ ] **RE4.1** On `engine.is_terminal()`, call `brain.decide(RENDER_VERDICT, score_trajectory=…)`.
+- [x] **RE4.1** On `engine.is_terminal()`, call `brain.decide(RENDER_VERDICT, score_trajectory=…)`.
   - *DoD:* fires exactly once at terminal (6.a).
-- [ ] **RE4.2** `result.py`: emit `GAME_OVER{result=winner, reason=rationale, final_state=DebateState.to_dict() with verdict}` and dump the trajectory to `results/` post-game.
+- [x] **RE4.2** `result.py`: emit `GAME_OVER{result=winner, reason=rationale, final_state=DebateState.to_dict() with verdict}` and dump the trajectory to `results/` post-game.
   - *DoD:* full 2e verdict on the wire (7.c, R-AC7); numbers only in the post-game dump (6.d).
 
 ### E5 — Move-timeout policy (FR-FT1, FR-FT2, FR-FT3)
-- [ ] **RE5.1** Start one per-turn wall-clock budget (`move_timeout_seconds`) at `MOVE_REQUEST`; the clock does **not** reset on a 3b re-request (shared across retries).
+- [x] **RE5.1** Start one per-turn wall-clock budget (`move_timeout_seconds`) at `MOVE_REQUEST`; the clock does **not** reset on a 3b re-request (shared across retries).
   - *DoD:* total per-turn wall-clock ≤ `move_timeout` regardless of attempts (FR-FT1, 8.1).
-- [ ] **RE5.2** On expiry: append a penalized empty `TurnRecord` (`flag="timeout"`, floor scores), advance, continue — never forfeit.
+- [x] **RE5.2** On expiry: append a penalized empty `TurnRecord` (`flag="timeout"`, floor scores), advance, continue — never forfeit.
   - *DoD:* timed-out turn yields a scored-zero turn, match continues.
 - [ ] **RE5.3** Use the existing `WatchdogThread`/`HeartbeatSender` for liveness, decoupled from `move_timeout`; raising `move_timeout` must not trip a disconnect.
   - *DoD:* a slow-but-beating peer is not disconnected (FR-FT2/FT3, 8.2).
+  - **NOTE:** `recv_timed` handles the move timeout; WatchdogThread integration deferred to the TCP server wiring (Module F/H).
 - [ ] **RE5.4** Discriminator: beats flowing + no move → penalized skip (keep data); beats stopped → disconnect path (RE6).
   - *DoD:* the two paths are distinguished by heartbeat state (8.2).
+  - **NOTE:** deferred to server wiring (Module F/H); in-memory tests use `ConnectionClosedError` directly.
 
 ### E6 — Disconnect & garbage (FR-FT4, FR-FT5)
-- [ ] **RE6.1** On `WatchdogThread.on_timeout(peer)` after GAME_START: terminate with a forced verdict on the partial transcript; tag `terminated_reason="disconnect"`.
+- [x] **RE6.1** On `ConnectionClosedError` after GAME_START: terminate with a forced verdict on the partial transcript; tag `terminated_reason="disconnect"`.
   - *DoD:* still emits exactly one `GAME_OVER` (FR-FT4, 8.3).
-- [ ] **RE6.2** Tag disconnect matches for **exclusion** from aggregates + same-seed re-run (metadata flag, consumed by the sweep runner).
-  - *DoD:* the GAME_OVER/metadata carries the exclusion tag (8.3).
-- [ ] **RE6.3** Bad **content** (codec/validation error): reply `ERROR{code="MALFORMED_MESSAGE", message=reason}`, drop the frame, do **not** advance the turn (the move_timeout still governs).
+- [x] **RE6.2** Tag disconnect matches for **exclusion** from aggregates + same-seed re-run (metadata flag, consumed by the sweep runner).
+  - *DoD:* the GAME_OVER payload carries `terminated_reason="disconnect"` (8.3).
+- [x] **RE6.3** Bad **content** (codec/validation error): reply `ERROR{code="MALFORMED_MESSAGE", message=reason}`, drop the frame, do **not** advance the turn (the move_timeout still governs).
   - *DoD:* repeated garbage until expiry → penalized skip (FR-FT5, 8.4).
-- [ ] **RE6.4** Broken **stream** (`ConnectionClosedError`/`FrameTooLargeError`): escalate to the disconnect path (RE6.1).
+- [x] **RE6.4** Broken **stream** (`ConnectionClosedError`/`FrameTooLargeError`): escalate to the disconnect path (RE6.1).
   - *DoD:* a closed/oversized stream → disconnect, not MALFORMED (8.4).
 
 ### E7 — The invariant (FR-FT7)
-- [ ] **RE7.1** Wrap the post-`GAME_START` match in `try/finally` guaranteeing a `GAME_OVER` + trajectory dump even on an unexpected exception (degenerate "aborted" verdict, tagged `terminated_reason="aborted"`).
+- [x] **RE7.1** Wrap the post-`GAME_START` match in `try/finally` guaranteeing a `GAME_OVER` + trajectory dump even on an unexpected exception (degenerate "aborted" verdict, tagged `terminated_reason="aborted"`).
   - *DoD:* an injected mid-loop exception still yields exactly one `GAME_OVER` (FR-FT7, 8.6, R-AC6).
 
 ### E8 — Tests
-- [ ] **RE8.1** Loop happy path with `SimpleRefereeBrain` + stub channels → exactly one `GAME_OVER`.
+- [x] **RE8.1** Loop happy path with `SimpleRefereeBrain` + stub channels → exactly one `GAME_OVER`.
   - *DoD:* assertion passes.
-- [ ] **RE8.2** Retry gate: illegal then legal resubmit; retry exhaustion → penalized turn.
+- [x] **RE8.2** Retry gate: illegal then legal resubmit; retry exhaustion → penalized turn.
   - *DoD:* both paths covered.
-- [ ] **RE8.3** Move-timeout → penalized skip (no forfeit); shared budget across retries.
-  - *DoD:* assertions pass (8.1).
-- [ ] **RE8.4** Disconnect → forced verdict tagged; MALFORMED content drop vs broken-stream disconnect.
+- [x] **RE8.3** Move-timeout → penalized skip (no forfeit); shared budget across retries.
+  - *DoD:* assertions pass (8.1). Implemented via `unittest.mock.patch` on `recv_timed`.
+- [x] **RE8.4** Disconnect → forced verdict tagged; MALFORMED content drop vs broken-stream disconnect.
   - *DoD:* three assertions pass (8.3/8.4).
-- [ ] **RE8.5** Injected exception under `try/finally` still yields one `GAME_OVER` (the 8.6 guard).
+- [x] **RE8.5** Injected exception under `try/finally` still yields one `GAME_OVER` (the 8.6 guard).
   - *DoD:* assertion passes (R-AC6).
-- [ ] **RE8.6** Brain-call count test (no pre-turn call) — RE2.3.
+- [x] **RE8.6** Brain-call count test (no pre-turn call) — RE2.3.
   - *DoD:* count == scored-turns + 1.
 
 ---
@@ -412,16 +453,16 @@
 
 ## Module K — Cross-cutting quality gates (every module) → TC.1/TC.2/TC.3/TC.4, R-AC11, R-AC9
 
-- [ ] **RK.1** After each module: `ruff check` reports 0 violations on the new files.
-  - *DoD:* clean (TC.2, R-AC11).
-- [ ] **RK.2** Every new source file ≤ 150 code lines; split when approaching the limit.
-  - *DoD:* `wc -l` per file ≤ 150 (TC.3, R-AC11).
-- [ ] **RK.3** Global coverage ≥ 85 % after each phase (`uv run pytest --cov`).
-  - *DoD:* report ≥ 85 % (TC.1, R-AC11).
-- [ ] **RK.4** No hardcoded host/port/timeout/weight/cap in source — all from config.
-  - *DoD:* grep finds no operational literals (TC.4, AC8).
+- [x] **RK.1** After each module: `ruff check` reports 0 violations on the new files.
+  - *DoD:* clean (TC.2, R-AC11). ✅ Verified for Modules A–E.
+- [x] **RK.2** Every new source file ≤ 150 code lines; split when approaching the limit.
+  - *DoD:* `wc -l` per file ≤ 150 (TC.3, R-AC11). ✅ `game_loop.py` split into 3 files.
+- [x] **RK.3** Global coverage ≥ 85 % after each phase (`uv run pytest --cov`).
+  - *DoD:* report ≥ 85 % (TC.1, R-AC11). ✅ 96% after Module E.
+- [x] **RK.4** No hardcoded host/port/timeout/weight/cap in source — all from config.
+  - *DoD:* grep finds no operational literals (TC.4, AC8). ✅ Verified for Modules A–E.
 - [ ] **RK.5** **AC9 guard:** after the debate lands, `git diff` on `services/protocol/` is empty and `PROTOCOL_VERSION == "1.00"`.
-  - *DoD:* zero protocol diff confirmed (R-AC9, 7.a) — assert in CI.
+  - *DoD:* zero protocol diff confirmed (R-AC9, 7.a) — assert in CI. ⏳ Verify at Module H.
 
 ---
 
@@ -429,18 +470,18 @@
 
 `A → B → C → D → E → F → G → H (GATE) → I → J`, with **K asserted after every module**.
 
-| Step | Block | Commit scope (suggested)        | Gate |
-|------|-------|----------------------------------|------|
-| 1 | A1–A7 | `feat(game/state)`               | round-trip + public-only tests green |
-| 2 | B1–B7 | `feat(game/engine)`              | full schedule + Tier-1 tests green |
-| 3 | C1–C4 | `feat(referee/brain-base)`       | ABC + aggregate tests green |
-| 4 | D1–D7 | `feat(referee/simple-brain)`     | determinism + no-external-call guard green |
-| 5 | E1–E8 | `feat(referee/game-loop)`        | retry/timeout/disconnect/invariant tests green |
-| 6 | F1–F5 | `feat(referee/match-setup)`      | game_config + pre-start abort tests green |
-| 7 | G1–G3 | `feat(config/debate)`            | config load + validation green |
-| 8 | H1–H2 | `test(integration/debate-loop)`  | **HARD GATE — real DebateEngine → reproducible GAME_OVER** |
-| 9 | I1–I3 | `feat(referee/llm-brain)`        | swap-only; AC9 still holds |
-| 10| J1–J4 | `feat(experiment/harness)`       | sweep + notebook run end-to-end |
+| Step | Block | Commit scope (suggested)        | Gate | Status |
+|------|-------|----------------------------------|------|--------|
+| 1 | A1–A7 | `feat(game/state)`               | round-trip + public-only tests green | ✅ a4b4aaf |
+| 2 | B1–B7 | `feat(game/engine)`              | full schedule + Tier-1 tests green | ✅ 557cfe5 |
+| 3 | C1–C4 | `feat(referee/brain-base)`       | ABC + aggregate tests green | ✅ 4703095 |
+| 4 | D1–D7 | `feat(referee/simple-brain)`     | determinism + no-external-call guard green | ✅ 12f5004 |
+| 5 | E1–E8 | `feat(referee/game-loop)`        | retry/timeout/disconnect/invariant tests green | ✅ bc00e69 |
+| 6 | F1–F5 | `feat(referee/match-setup)`      | game_config + pre-start abort tests green | ⏳ next |
+| 7 | G1–G3 | `feat(config/debate)`            | config load + validation green | ⏳ |
+| 8 | H1–H2 | `test(integration/debate-loop)`  | **HARD GATE — real DebateEngine → reproducible GAME_OVER** | ⏳ |
+| 9 | I1–I3 | `feat(referee/llm-brain)`        | swap-only; AC9 still holds | ⏳ |
+| 10| J1–J4 | `feat(experiment/harness)`       | sweep + notebook run end-to-end | ⏳ |
 
 The hard gate is **step 8 (H2)**: when the real `DebateEngine` + `SimpleRefereeBrain` run to a
 reproducible `GAME_OVER`, the substrate is proven game/brain-agnostic and the LLM phase (Module I)

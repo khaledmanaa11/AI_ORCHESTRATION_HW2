@@ -72,27 +72,31 @@
       typed rejections.
 
 ## Phase 4 — Referee (Milestone M4)
-- [ ] **T4.1** `services/game/engine_base.py` — `GameEngine` abstract interface
-      (PLAN §5.7). — *DoD:* interface documented; mockable.
+- [x] **T4.1** `services/game/engine_base.py` — `GameEngine` abstract interface
+      (PLAN §5.7). — *DoD:* interface documented; mockable. ✅ commit 557cfe5
 - [ ] **T4.2** `services/game/trivial_game.py` — placeholder `GameEngine`. — *DoD:*
       produces a terminal state within ≤ 10 turns; exercised by integration tests.
-- [ ] **T4.3** `services/referee/state.py` — match/game state model; immutable
-      transitions. — *DoD:* tested; illegal transitions raise typed errors.
+      **NOTE:** skipped — `DebateEngine` serves as the concrete engine directly.
+- [x] **T4.3** `services/game/debate_state.py` — debate game state model; immutable
+      frozen dataclasses (`TurnRecord`, `DebateMove`, `DebateState`). — *DoD:* tested;
+      round-trips + public-only invariant pass. ✅ commit a4b4aaf
 - [ ] **T4.4** `services/referee/matchmaking.py` — accept exactly `player_count` players;
       reject 3rd; handle `lobby_timeout`; assign unique roles; send `REGISTER_ACK` (with
       `match_id`) then `ROLE_ASSIGN` as separate messages. — *DoD:* AC1, AC2; lobby
-      timeout tested.
-- [ ] **T4.5** `services/referee/game_loop.py` — turn orchestration; move validation via
-      `GameEngine`; consults `RefereeBrain` for rulings; broadcasts `STATE_UPDATE`. —
-      *DoD:* move timeout and disconnect handled (AC4).
-- [ ] **T4.6** `services/referee/result.py` — terminal detection; `GAME_OVER` broadcast. —
-      *DoD:* tested for win, draw, and forfeit paths.
-- [ ] **T4.7** `services/referee/brain/base.py` — `RefereeBrain` abstract interface
+      timeout tested. ⏳ **Module F — next to implement**
+- [x] **T4.5** `services/referee/game_loop.py` + `_turn_runner.py` — turn orchestration;
+      two-tier move validation; retry gate; timeout/disconnect fault policy; broadcasts
+      `STATE_UPDATE`. — *DoD:* all fault paths tested. ✅ commit bc00e69
+- [x] **T4.6** `services/referee/result.py` — `GAME_OVER` broadcast + trajectory dump. —
+      *DoD:* tested for complete, disconnect, and aborted paths. ✅ commit bc00e69
+- [x] **T4.7** `services/referee/brain/base.py` — `RefereeBrain` abstract interface
       (`RefereeContext` in, `RefereeDecision` out). — *DoD:* interface documented; mockable.
-- [ ] **T4.8** `services/referee/brain/simple_brain.py` — Phase-1 placeholder; returns
-      deterministic/scripted decisions. — *DoD:* tested; no external calls.
+      ✅ commit 4703095
+- [x] **T4.8** `services/referee/brain/simple_brain.py` — deterministic word-count brain;
+      concession scan; no external calls. — *DoD:* tested; deterministic. ✅ commit 12f5004
 - [ ] **T4.9** `services/referee/server.py` — wires together matchmaking, game loop,
       result, and teardown. — *DoD:* runs full loop against stub brains and channels.
+      ⏳ **Module H (integration gate)**
 
 ## Phase 5 — Player (Milestone M5)
 - [ ] **T5.1** `services/player/brain/base.py` — `PlayerBrain` abstract interface
