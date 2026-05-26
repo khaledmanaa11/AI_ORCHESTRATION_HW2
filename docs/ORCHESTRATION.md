@@ -160,15 +160,20 @@ One logical phase per commit. Push command: `git push origin master`.
 | I.5 | **judge-prompt hardening** (3 arms carry rubric/motion/transcript; arms differ substantively) | `[x]` | 0053d55 |
 | P0 | player-arsenal: factor Gemini client to `shared/llm_client.py` (referee+player reuse) | `[x]` | 319c451 |
 | P1 | player-brain contract (`PlayerBrain` ABC + `PlayerContext`/`PlayerDecision`; seeded conformance) | `[x]` | 6dba9c1 |
-| ▶ P2–P7 | **player-arsenal triplet** (prompts/parser/selector/llm-brain/capture/wiring) — see `PRD/PLAN/TODO_player.md` | `[ ]` | — |
-| J | experiment sweep (resumable, throttled to Gemini free tier) + results JSONL + analysis notebook | `[ ]` | — |
-| K | cross-cutting quality gates — asserted every phase | `[~]` | ongoing |
+| P2 | player prompts: ablation-aware structured prompt builder + fixture pack | `[x]` | deb4d60 |
+| P3–P7 | player arsenal complete (parser/selector/llm-brain/capture/wiring) | `[x]` | 241fa15 |
+| J | experiment sweep + results JSONL + analysis notebook | `[x]` | 241fa15 |
+| CLI | `uv run referee` / `uv run player` runnable, `--show-transcript` | `[x]` | 20ac986 |
+| fixes | flash-lite model default; player transcript + real evidence pack | `[x]` | 55b8e13, 8a5c372 |
+| SDK | migrate `google.generativeai` → `google.genai` (fixes referee schema crash) | `[x]` | 94106f7 |
+| K | cross-cutting quality gates — asserted every phase | `[x]` | ongoing |
+| ▶ RUN | **experiment / run / report mode** — all build phases complete | `[~]` | — |
 
-**Player-arsenal triplet — WRITTEN (2026-05-26):** `docs/PRD_player.md`, `docs/PLAN_player.md`,
-`docs/TODO_player.md`. Build-shape locked: one structured Gemini call/turn (BS-1), deterministic
-Best-of-N selector (BS-2), shared LLM client (BS-3), A+ seed reproducibility (BS-4), per-process
-stream files + post-game dump (BS-5). Build order `P0→P7`; **resume at P0** (factor the Gemini
-client to `shared/`). Module J (the sweep) consumes this triplet's stream-b output.
+**BUILD COMPLETE (2026-05-26).** Every phase A→J plus the player-arsenal triplet, CLIs, and the
+`google.genai` migration are committed and pushed. We are now in **run/report mode**, not
+feature-build mode. The only thing gating real LLM matches is **Gemini free-tier quota**
+(`gemini-2.5-flash-lite` = ~20 requests/day), not code. See `docs/CURRENT_STATE.md` for the
+run recipe. `notebooks/analysis.ipynb` is the reporting surface once a sweep has data.
 
 **Reference docs:** `docs/TODO_referee.md` (actionable spec), `docs/PRD_referee.md` (requirements),
 `docs/PLAN_referee.md` (design), `docs/DESIGN_LEDGER.md` (rationale of record).

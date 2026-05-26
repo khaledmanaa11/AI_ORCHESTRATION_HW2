@@ -55,7 +55,7 @@
       }
     },
     "match": {
-      "motion": "AI is beneficial",
+      "motion": "Autonomous AI agents should be allowed to make consequential decisions without human approval",
       "evidence_pack": "evidence_pack_primary",
       "seed": 42,
       "run_id": "run_001",
