@@ -5,6 +5,7 @@ description = "A network orchestration substrate for running multi-agent turn-ba
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "google-generativeai>=0.8.6",
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.0",
 ]

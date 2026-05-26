@@ -375,30 +375,30 @@
 
 ---
 
-## Module I — LLM referee brain (Phase 7) · `services/referee/brain/llm_brain.py` (S2, S6) → T7.2
+## Module I — LLM referee brain (Phase 7) · `services/referee/brain/llm_brain.py` (S2, S6) → T7.2  ✅ DONE
 
 > Same `decide()` interface; **swap-only** (engine/state/config/protocol unchanged). Covers FR-JU1–JU7.
 
 ### I1 — Class & call (FR-RB7, FR-JU2, FR-JU5)
-- [ ] **RI1.1** `class LLMRefereeBrain(LLMCallerMixin, RefereeBrain)`; `decide` dispatches on `request_kind`.
+- [x] **RI1.1** `class LLMRefereeBrain(LLMCallerMixin, RefereeBrain)`; `decide` dispatches on `request_kind`.
   - *DoD:* same interface as `SimpleRefereeBrain`; mocked `LLMCallerMixin` in unit tests (no real API).
-- [ ] **RI1.2** EVALUATE_TURN: one LLM call produces **both** the public `tell` and private per-criterion `turn_scores` (Logic/Evidence/Rebuttal/Persuasion, 0–10).
+- [x] **RI1.2** EVALUATE_TURN: one LLM call produces **both** the public `tell` and private per-criterion `turn_scores` (Logic/Evidence/Rebuttal/Persuasion, 0–10).
   - *DoD:* one invocation; tell number-free; scores cover the 4 criteria (FR-JU1/JU2, 6.f).
-- [ ] **RI1.3** RENDER_VERDICT reuses `aggregate_verdict` (RC3.1) with weights from config + an LLM-written holistic rationale; tiebreak = forced holistic call.
+- [x] **RI1.3** RENDER_VERDICT reuses `aggregate_verdict` (RC3.1) with weights from config + an LLM-written holistic rationale; tiebreak = forced holistic call.
   - *DoD:* verdict is the full 2e shape; no draws (FR-JU4/JU5, 2d).
 
 ### I2 — Variant strategy (FR-JU3, FR-JU6, FR-JU7)
-- [ ] **RI2.1** `judge_variant` selects the judge prompt: naive (rubric straight) vs hardened (bias warnings, discount unverifiable, lean on checkable substance).
+- [x] **RI2.1** `judge_variant` selects the judge prompt: naive (rubric straight) vs hardened (bias warnings, discount unverifiable, lean on checkable substance).
   - *DoD:* the three arms share rubric/weights/verdict, differ only in prompt (FR-JU6).
-- [ ] **RI2.2** Arm-3 only: run `_verify_grounding(move, evidence_pack)` (citations traceable to the pack) feeding the Evidence criterion; Arm-1/2 skip it.
+- [x] **RI2.2** Arm-3 only: run `_verify_grounding(move, evidence_pack)` (citations traceable to the pack) feeding the Evidence criterion; Arm-1/2 skip it.
   - *DoD:* fabricated/un-pack citations are caught only under Arm-3 (FR-JU7, 6.g).
-- [ ] **RI2.3** Apply config weights 30/30/25/15 in the aggregate (FR-JU3).
+- [x] **RI2.3** Apply config weights 30/30/25/15 in the aggregate (FR-JU3).
   - *DoD:* changing config weights changes the verdict deterministically (given fixed scores).
 
 ### I3 — Tests & swap proof
-- [ ] **RI3.1** Unit tests with mocked `LLMCallerMixin`: tell/scores parsing, 3-arm prompt selection, Arm-3 grounding.
+- [x] **RI3.1** Unit tests with mocked `LLMCallerMixin`: tell/scores parsing, 3-arm prompt selection, Arm-3 grounding.
   - *DoD:* no real API call; assertions pass.
-- [ ] **RI3.2** Re-run the integration gate (H2) swapping only the brain class → still one `GAME_OVER`, protocol unchanged.
+- [x] **RI3.2** Re-run the integration gate (H2) swapping only the brain class → still one `GAME_OVER`, protocol unchanged.
   - *DoD:* AC9 holds end-to-end (RG-8, 9.i, R-AC9).
 
 ---

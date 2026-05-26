@@ -26,7 +26,8 @@ class FramingConfig(BaseModel):
     max_frame_size_bytes: int = Field(10485760, description="Max frame buffer size in bytes")
 
 class LLMConfig(BaseModel):
-    model_name: str = Field(..., description="Anthropic model identifier used by LLM brains")
+    provider: str = Field("google", description="LLM provider name")
+    model_name: str = Field(..., description="LLM model identifier used by brains")
 
 # ── Debate config submodels (Module G) ──────────────────────────────
 
