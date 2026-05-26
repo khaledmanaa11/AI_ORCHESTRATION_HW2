@@ -1,0 +1,52 @@
+# Run 1 — full LLM match (referee --brain llm) — BEFORE any fix
+# Command: uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript
+# Outcome: CRASH on first referee EVALUATE_TURN — deprecated google.generativeai
+#          proto Schema rejects the `maximum` field Pydantic emits for Field(ge=0, le=10).
+# Verdict: forced degenerate draw (verdict-reachability invariant held).
+
+src\agent_arena\shared\llm_client.py:6: FutureWarning:
+
+All support for the `google.generativeai` package has ended. It will no longer be receiving
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+
+  import google.generativeai as genai
+INFO:agent_arena.shared.transport.tcp_server:TcpServer listening on 127.0.0.1:9000
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 1/2 from ('127.0.0.1', 52969)
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 2/2 from ('127.0.0.1', 52970)
+ERROR:agent_arena.services.referee.game_loop:Unexpected abort in match=840b0fac-817e-46e5-ae52-a970413e1e4a
+Traceback (most recent call last):
+  File ".../proto/marshal/rules/message.py", line 36, in to_proto
+    return self._descriptor(**value)
+ValueError: Protocol message Schema has no "maximum" field.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "...\src\agent_arena\shared\llm_client.py", line 40, in generate_json
+    result = model.generate_content(...)
+  File ".../google/generativeai/types/generation_types.py", line 202, in _normalize_schema
+    generation_config["response_schema"] = protos.Schema(response_schema)
+ValueError: Unknown field for Schema: maximum
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "...\src\agent_arena\services\referee\game_loop.py", line 88, in run
+    state = self._run_turns(state)
+  File "...\src\agent_arena\services\referee\_turn_runner.py", line 133, in run_turn
+    d = brain.decide(ctx)
+  File "...\src\agent_arena\services\referee\brain\llm_brain.py", line 73, in _evaluate_turn
+    result: TurnEvaluationResult = self._generate_json(prompt, TurnEvaluationResult)
+agent_arena.shared.llm_client.LLMError: Unexpected error during generation: Unknown field for Schema: maximum
+
+=== Debate Transcript ===
+Motion: AI is beneficial
+
+=== Verdict ===
+Winner: null
+Margin: 0.0
+Rationale: The debate concluded in a draw, with neither side achieving a decisive victory.
+The scores were perfectly balanced across all categories, resulting in a 0.0 margin.

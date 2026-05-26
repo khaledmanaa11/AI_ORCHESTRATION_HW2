@@ -1,0 +1,13 @@
+# Run 4 — full LLM match — AFTER backoff fix (commit f1cc665), new key, locked motion
+# Command: uv run referee --config config/setup.json --brain llm --move-timeout 300 --show-transcript
+# Outcome: IN PROGRESS at time of first commit. The backoff fix is visibly working —
+#          it hit a 429 at call 6 and waited out the per-minute window instead of aborting
+#          (contrast Run 3, which gave up after 1-2s). Slow by design (~10 calls/min).
+# Final verdict appended once the match completes.
+
+INFO:agent_arena.shared.transport.tcp_server:TcpServer listening on 127.0.0.1:9000
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 1/2 from ('127.0.0.1', 56742)
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 2/2 from ('127.0.0.1', 56743)
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"   (x5)
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+# <-- backoff now sleeps ~22s and continues (no abort). Match still running.

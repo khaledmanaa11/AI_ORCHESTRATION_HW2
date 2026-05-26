@@ -1,0 +1,29 @@
+# Run 3 — full LLM match — NEW API key + locked motion (commit c990cd1)
+# Command: uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript
+# Outcome: New key has daily quota, but we exceeded the PER-MINUTE cap (10/min). Best-of-N=3
+#          makes calls bursty. Server asked to wait ~22s; our 1-2s backoff was too short -> abort.
+#          This is what motivated commit f1cc665 (honor server retry-after).
+# Verdict: CON, margin -0.7958. Note: motion is now the LOCKED primary motion.
+
+INFO:agent_arena.shared.transport.tcp_server:TcpServer listening on 127.0.0.1:9000
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 1/2 from ('127.0.0.1', 62634)
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 2/2 from ('127.0.0.1', 62635)
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"   (x5)
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+ERROR:agent_arena.services.referee.game_loop:Unexpected abort in match=e560f194-...
+google.genai.errors.ClientError: 429 RESOURCE_EXHAUSTED.
+  Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests
+  limit: 10, model: gemini-2.5-flash-lite
+  quotaId: GenerateRequestsPerMinutePerProjectPerModel-FreeTier   <-- PER MINUTE
+  Please retry in 22.212969542s.
+agent_arena.shared.llm_client.LLMError: Failed after 3 attempts: 429 RESOURCE_EXHAUSTED ...
+
+=== Debate Transcript ===
+Motion: Autonomous AI agents should be allowed to make consequential decisions without human approval
+
+=== Verdict ===
+Winner: CON
+Margin: -0.7958
+Rationale: Aggregate verdict: CON wins with margin 0.80.

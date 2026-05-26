@@ -1,0 +1,32 @@
+# Run 2 — full LLM match — AFTER migrating to google.genai (commit 94106f7)
+# Command: uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript
+# Outcome: SCHEMA BUG FIXED — first calls return 200 OK and the referee actually judges turns.
+#          No more deprecation warning. Then hit the real free-tier DAILY quota (20/day),
+#          already mostly spent across runs today. Backoff (1-2s) too short -> abort.
+# Verdict: CON, margin -1.175 (forced after quota exhaustion).
+
+INFO:agent_arena.shared.transport.tcp_server:TcpServer listening on 127.0.0.1:9000
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 1/2 from ('127.0.0.1', 56474)
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 2/2 from ('127.0.0.1', 56475)
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST .../gemini-2.5-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+ERROR:agent_arena.services.referee.game_loop:Unexpected abort in match=2d8aaa4b-...
+google.genai.errors.ClientError: 429 RESOURCE_EXHAUSTED.
+  Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests
+  limit: 20, model: gemini-2.5-flash-lite
+  quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier   <-- PER DAY
+  Please retry in 5.692115852s.
+agent_arena.shared.llm_client.LLMError: Failed after 3 attempts: 429 RESOURCE_EXHAUSTED ...
+
+=== Debate Transcript ===
+Motion: AI is beneficial
+
+=== Verdict ===
+Winner: CON
+Margin: -1.175
+Rationale: Aggregate verdict: CON wins with margin 1.18.
