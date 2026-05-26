@@ -1,0 +1,11 @@
+{
+  "pack_id": "evidence_pack_test",
+  "DOC-001": {
+    "title": "Study on AI Efficiency",
+    "text": "A comprehensive study showing AI efficiency increases productivity by 40%."
+  },
+  "DOC-002": {
+    "title": "Report on Remote Work",
+    "text": "Analysis indicating remote workers report 20% higher job satisfaction."
+  }
+}

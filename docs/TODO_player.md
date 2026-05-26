@@ -12,9 +12,9 @@
 ## ⚡ NEXT-SESSION HANDOFF (pick up here)
 
 **Sibling triplet (referee) complete:** Modules A → I.5 (latest `0053d55`, pushed).
-**This triplet (player arsenal) status:** Module P1 completed.
+**This triplet (player arsenal) status:** Module P2 completed.
 
-**Start with Module P2** — single prompt builder (`services/player/brain/player_prompts.py`). Then P3 → P7 in order.
+**Start with Module P3** — output parser (`services/player/brain/output_parser.py`). Then P4 → P7 in order.
 
 **Build order reminder:** `P0 → P1 → P2 → P3 → P4 → P5 → P6 → P7`, K asserted after every phase.
 Commit after each phase passes the gate. One phase per commit; developer never pushes.
@@ -67,30 +67,30 @@ Commit after each phase passes the gate. One phase per commit; developer never p
 
 ---
 
-## Module P2 — Single prompt builder · `services/player/brain/player_prompts.py` (FR-RD/CT/RX/AB) `[ ]`
+## Module P2 — Single prompt builder · `services/player/brain/player_prompts.py` (FR-RD/CT/RX/AB) `[x]`
 
 ### P2.1 — Structured-output contract
-- [ ] **RP2.1** Define the required JSON output shape in the prompt: `{read_profile, reflexion_lesson,
+- [x] **RP2.1** Define the required JSON output shape in the prompt: `{read_profile, reflexion_lesson,
   candidate_drafts:[{text, targets}]}` with `best_of_N` drafts (FR-BN1, FR-RD1, FR-RX2).
   - *DoD:* the prompt explicitly requests this schema; N read from config.
 
 ### P2.2 — Ablation-aware section assembly
-- [ ] **RP2.2** Assemble the always-on sections (motion, side, phase, word cap, must-engage, rubric,
+- [x] **RP2.2** Assemble the always-on sections (motion, side, phase, word cap, must-engage, rubric,
   evidence pack, prior lessons) (FR-PB2, FR-EV1).
   - *DoD:* present regardless of ablation.
-- [ ] **RP2.3** β / OFF-roster branch (master=false): honest adaptation, no exploit instructions,
+- [x] **RP2.3** β / OFF-roster branch (master=false): honest adaptation, no exploit instructions,
   empty `targets` (FR-AB2).
   - *DoD:* no CONTROL vocabulary appears.
-- [ ] **RP2.4** ON-roster branch (master=true): per-enabled-vector CONTROL instructions
+- [x] **RP2.4** ON-roster branch (master=true): per-enabled-vector CONTROL instructions
   (sycophancy / authority+fabrication / bandwagon / fallacy), adaptive persona (if
   `adaptive_persona`), READ-targeting (if `read_targeting`) (FR-CT1/3, FR-RD4, FR-AB3).
   - *DoD:* a disabled vector's instruction is absent; OFF roster ≠ ON roster (asserted, PL-AC4).
-- [ ] **RP2.5** baseline_mode α branch: β with tell-reading suppressed (FR-AB4) `[8.12]`.
+- [x] **RP2.5** baseline_mode α branch: β with tell-reading suppressed (FR-AB4) `[8.12]`.
   - *DoD:* α prompt omits the tell-adaptation section.
-- [ ] **RP2.6** Return `(prompt_str, generation_params)` where params (temperature, top_p, optional
+- [x] **RP2.6** Return `(prompt_str, generation_params)` where params (temperature, top_p, optional
   seed) come from config; **no LLM call here** (BS-1).
   - *DoD:* builder is a pure function of context + config.
-- [ ] **RP2.7** Add the fixture evidence pack `config/fixtures/evidence_pack_test.json` (FR-EV3).
+- [x] **RP2.7** Add the fixture evidence pack `config/fixtures/evidence_pack_test.json` (FR-EV3).
   - *DoD:* small, real-shaped; used only by tests.
 
 *(If this file exceeds ~150 lines, split into a section-assembler + a vector-catalog module — PL-AC9.)*
@@ -192,7 +192,7 @@ Commit after each phase passes the gate. One phase per commit; developer never p
 |------|-------|--------------------------|------|--------|
 | 1 | P0 | `refactor(shared/llm-client)` | referee suite green; protocol diff empty | ✅ |
 | 2 | P1 | `feat(player/brain-base)` | ABC + dataclass + seeded conformance tests green | ✅ |
-| 3 | P2 | `feat(player/prompts)` | section-assembly + OFF≠ON + α tests green | ⏳ |
+| 3 | P2 | `feat(player/prompts)` | section-assembly + OFF≠ON + α tests green | ✅ |
 | 4 | P3 | `feat(player/output-parser)` | valid + malformed-fallback tests green | ⏳ |
 | 5 | P4 | `feat(player/selector)` | both modes + tie-break tests green | ⏳ |
 | 6 | P5 | `feat(player/llm-brain)` | one-call + trace-shape + stateless tests green | ⏳ |
