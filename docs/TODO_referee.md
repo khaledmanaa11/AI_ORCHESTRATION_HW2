@@ -378,6 +378,7 @@
 ## Module I — LLM referee brain (Phase 7) · `services/referee/brain/llm_brain.py` (S2, S6) → T7.2  ✅ DONE
 
 > Same `decide()` interface; **swap-only** (engine/state/config/protocol unchanged). Covers FR-JU1–JU7.
+> **Note:** judge prompts hardened — arms differentiated, rubric/motion/transcript injected.
 
 ### I1 — Class & call (FR-RB7, FR-JU2, FR-JU5)
 - [x] **RI1.1** `class LLMRefereeBrain(LLMCallerMixin, RefereeBrain)`; `decide` dispatches on `request_kind`.

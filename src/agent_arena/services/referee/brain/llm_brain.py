@@ -14,8 +14,14 @@ from agent_arena.services.referee.brain.base import (
     aggregate_verdict,
 )
 from agent_arena.services.referee.brain.gemini_client import GeminiClient
+from agent_arena.services.referee.brain.judge_prompts import (
+    build_rationale_prompt,
+    build_tiebreak_prompt,
+    build_turn_prompt,
+)
 
 logger = logging.getLogger(__name__)
+
 
 class TurnEvaluationResult(BaseModel):
     tell: str = Field(description="Number-free public acknowledgment of the turn.")
@@ -24,17 +30,22 @@ class TurnEvaluationResult(BaseModel):
     rebuttal_score: float = Field(ge=0, le=10)
     persuasion_score: float = Field(ge=0, le=10)
 
+
 class HolisticTiebreakResult(BaseModel):
     winner: str = Field(description="The winner, exactly 'PRO' or 'CON'.")
     rationale: str = Field(description="Holistic rationale for breaking the tie.")
 
+
 class HolisticRationaleResult(BaseModel):
     rationale: str = Field(description="Holistic rationale summarizing the debate and verdict.")
 
+
 class LLMCallerMixin:
     """Mixin for testability. Overridden in unit tests to mock LLM calls."""
+
     def _generate_json(self, prompt: str, schema: type[BaseModel]) -> BaseModel:
-        return self._client.generate_json(prompt, self._model_name, schema) # type: ignore
+        return self._client.generate_json(prompt, self._model_name, schema)  # type: ignore
+
 
 class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
     """LLM-backed referee brain using Gemini."""
@@ -58,8 +69,8 @@ class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
         cur_phase = state.get("phase", "?")
         variant = context.judge_variant
 
-        prompt = self._build_turn_prompt(variant, text, side, t, cur_phase)
-        result: TurnEvaluationResult = self._generate_json(prompt, TurnEvaluationResult) # type: ignore
+        prompt = build_turn_prompt(variant, text, side, t, cur_phase, state, context.rubric)
+        result: TurnEvaluationResult = self._generate_json(prompt, TurnEvaluationResult)  # type: ignore
 
         evidence_score = result.evidence_score
         if variant == "structural" and not self._verify_grounding(text, context.evidence_pack):
@@ -73,16 +84,6 @@ class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
         }
 
         return RefereeDecision(legal=True, flag=None, tell=result.tell, turn_scores=turn_scores)
-
-    def _build_turn_prompt(self, variant: str, text: str, side: str, t: int, phase: str) -> str:
-        base = f"Evaluate turn {t} in {phase} by {side}.\nUtterance: {text}\n"
-        if variant == "hardened":
-            base += "Apply rubric with bias warnings. Discount unverifiable claims. Lean on checkable substance."
-        elif variant == "structural":
-            base += "Apply rubric structurally. Focus on argument forms."
-        else:
-            base += "Apply rubric straight."
-        return base
 
     def _verify_grounding(self, text: str, evidence_pack: dict[str, Any]) -> bool:
         """Arm-3 verification. Checks citations traceable to the pack."""
@@ -100,14 +101,14 @@ class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
         weights = rubric.get("weights", {"logic": 30.0, "evidence": 30.0, "rebuttal": 25.0, "persuasion": 15.0})
 
         def _llm_tiebreak(_trajectory: list[dict[str, Any]]) -> str:
-            prompt = "Tiebreak this trajectory and pick a winner (PRO or CON)."
-            result: HolisticTiebreakResult = self._generate_json(prompt, HolisticTiebreakResult) # type: ignore
+            prompt = build_tiebreak_prompt(context.state.get("transcript", []), context.score_trajectory)
+            result: HolisticTiebreakResult = self._generate_json(prompt, HolisticTiebreakResult)  # type: ignore
             return result.winner
 
         verdict = aggregate_verdict(context.score_trajectory, weights, _llm_tiebreak)
 
-        prompt = f"Write a holistic rationale summarizing the debate and this verdict: {verdict}"
-        rationale_result: HolisticRationaleResult = self._generate_json(prompt, HolisticRationaleResult) # type: ignore
+        prompt = build_rationale_prompt(verdict, context.state.get("transcript", []), context.score_trajectory)
+        rationale_result: HolisticRationaleResult = self._generate_json(prompt, HolisticRationaleResult)  # type: ignore
 
         verdict["rationale"] = rationale_result.rationale
         return RefereeDecision(legal=True, verdict=verdict)
