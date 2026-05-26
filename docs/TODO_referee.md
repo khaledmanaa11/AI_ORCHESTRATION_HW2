@@ -11,10 +11,10 @@
 
 ## ⚡ NEXT-SESSION HANDOFF (pick up here)
 
-**Completed so far:** Modules A → E (commits a4b4aaf → bc00e69, pushed to `origin/master`).
-**Current gate result:** ruff=0 violations, 196/198 tests pass (2 pre-existing `test_config.py` failures unrelated to our work), coverage = **96%**.
+**Completed so far:** Modules A → F (commits a4b4aaf → de73d5c, pushed to `origin/master`).
+**Current gate result:** ruff=0 violations, 216/218 tests pass (2 pre-existing `test_config.py` failures unrelated to our work), coverage = **97%**.
 
-**Start next session with Module F** — read `docs/PRD_referee.md` §7 (Protocol Mapping) and `docs/PRD_matchmaking.md` first, then implement:
+**Start next session with Module G** — implement:
 
 ### Module F — next (commit: `feat(referee/match-setup)`)
 Files to create:
@@ -313,40 +313,40 @@ Key constraints to honour:
 
 ---
 
-## Module F — Match setup & protocol mapping · `services/referee/matchmaking.py` (debate bits) + `result.py` (S7, S8) → T4.4
+## Module F — Match setup & protocol mapping · `services/referee/matchmaking.py` (debate bits) + `result.py` (S7, S8) → T4.4  ✅ DONE (commit de73d5c)
 
 > Covers Protocol-Mapping §10 rows and the pre-`GAME_START` abort (FR-FT6). **No protocol code edits.**
 
 ### F1 — `game_config` assembly (Protocol §10: ROLE_ASSIGN.game_config; 7.f/7.g)
-- [ ] **RF1.1** Build `game_config = {motion, rubric:{criteria, weights}, tie_break, verdict_structure, conduct_gate, format:{total_turns, R, word_cap, first_speaker, phase_schedule}, evidence_pack}`.
+- [x] **RF1.1** Build `game_config = {motion, rubric:{criteria, weights}, tie_break, verdict_structure, conduct_gate, format:{total_turns, R, word_cap, first_speaker, phase_schedule}, evidence_pack}`.
   - *DoD:* contents match 7.g exactly.
-- [ ] **RF1.2** **Exclude** `judge_variant` from `game_config` (referee-private).
+- [x] **RF1.2** **Exclude** `judge_variant` from `game_config` (referee-private).
   - *DoD:* a test asserts `"judge_variant"` is absent from any player-bound payload (7.g, R-AC2-adjacent).
-- [ ] **RF1.3** The **identical** evidence pack is sent to both players (symmetry, L4).
+- [x] **RF1.3** The **identical** evidence pack is sent to both players (symmetry, L4).
   - *DoD:* both ROLE_ASSIGN payloads carry the same pack bytes.
 
 ### F2 — Seeded side assignment & ROLE_ASSIGN (1e; Protocol §10: ROLE_ASSIGN.role)
-- [ ] **RF2.1** Assign PRO/CON by seedable RNG (config `seed`); side hidden until match start.
+- [x] **RF2.1** Assign PRO/CON by seedable RNG (config `seed`); side hidden until match start.
   - *DoD:* same seed → same assignment; reproducible (1e).
-- [ ] **RF2.2** Send each player its own `ROLE_ASSIGN{role=side, game_config}` (REGISTER_ACK with match_id first, then ROLE_ASSIGN — parent T4.4 sequencing).
+- [x] **RF2.2** Send each player its own `ROLE_ASSIGN{role=side, game_config}` (REGISTER_ACK with match_id first, then ROLE_ASSIGN — parent T4.4 sequencing).
   - *DoD:* role carries the side; game_config carries the pack+rubric (7.f).
 
 ### F3 — GAME_START construction (Protocol §10: GAME_START; 7.h)
-- [ ] **RF3.1** Build `GAME_START{initial_state=DebateState.to_dict() @ turn 0, turn_order=[first,second]}` where `first` follows `first_speaker`.
+- [x] **RF3.1** Build `GAME_START{initial_state=DebateState.to_dict() @ turn 0, turn_order=[first,second]}` where `first` follows `first_speaker`.
   - *DoD:* initial_state status PENDING, empty transcript; turn_order respects first_speaker (7.h).
 
 ### F4 — Pre-`GAME_START` abort (FR-FT6, 8.5)
-- [ ] **RF4.1** If the 2nd player never registers, a 3rd connects, or a player drops during lobby → `lobby_timeout_seconds` fires → clean abort, **no verdict, no data cell**.
+- [x] **RF4.1** If the 2nd player never registers, a 3rd connects, or a player drops during lobby → `lobby_timeout_seconds` fires → clean abort, **no verdict, no data cell**.
   - *DoD:* aborted match writes **no** results row (distinct from the disconnect case, 8.3).
-- [ ] **RF4.2** Reuse existing matchmaking reject-3rd + lobby_timeout logic — no new mechanism.
+- [x] **RF4.2** Reuse existing matchmaking reject-3rd + lobby_timeout logic — no new mechanism.
   - *DoD:* no new infra added (8.5).
 
 ### F5 — Tests
-- [ ] **RF5.1** `game_config` shape test incl. the `judge_variant`-absent assertion (RF1.2).
+- [x] **RF5.1** `game_config` shape test incl. the `judge_variant`-absent assertion (RF1.2).
   - *DoD:* assertion passes (the AC9/secrecy guard).
-- [ ] **RF5.2** Seeded side-assignment reproducibility test.
+- [x] **RF5.2** Seeded side-assignment reproducibility test.
   - *DoD:* same seed → same side mapping.
-- [ ] **RF5.3** Pre-start abort writes no data cell; mid-match disconnect (RE6) does write a tagged row — assert the boundary.
+- [x] **RF5.3** Pre-start abort writes no data cell; mid-match disconnect (RE6) does write a tagged row — assert the boundary.
   - *DoD:* the 8.5↔8.3 boundary is tested.
 
 ---
@@ -477,7 +477,7 @@ Key constraints to honour:
 | 3 | C1–C4 | `feat(referee/brain-base)`       | ABC + aggregate tests green | ✅ 4703095 |
 | 4 | D1–D7 | `feat(referee/simple-brain)`     | determinism + no-external-call guard green | ✅ 12f5004 |
 | 5 | E1–E8 | `feat(referee/game-loop)`        | retry/timeout/disconnect/invariant tests green | ✅ bc00e69 |
-| 6 | F1–F5 | `feat(referee/match-setup)`      | game_config + pre-start abort tests green | ⏳ next |
+| 6 | F1–F5 | `feat(referee/match-setup)`      | game_config + pre-start abort tests green | ✅ de73d5c |
 | 7 | G1–G3 | `feat(config/debate)`            | config load + validation green | ⏳ |
 | 8 | H1–H2 | `test(integration/debate-loop)`  | **HARD GATE — real DebateEngine → reproducible GAME_OVER** | ⏳ |
 | 9 | I1–I3 | `feat(referee/llm-brain)`        | swap-only; AC9 still holds | ⏳ |
