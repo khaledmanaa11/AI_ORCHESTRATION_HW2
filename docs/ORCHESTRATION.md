@@ -104,7 +104,8 @@ One logical phase per commit. Push command: `git push origin master`.
 | H | integration gate (real engine+brain → reproducible GAME_OVER) | `[x]` | 0e9434a |
 | I | Gemini `LLMRefereeBrain` (swap-only) | `[x]` | e9cc7f8 |
 | I.5 | **judge-prompt hardening** (3 arms carry rubric/motion/transcript; arms differ substantively) | `[x]` | 0053d55 |
-| ▶ P0–P7 | **player-arsenal triplet** (READ/CONTROL/Reflexion/Best-of-N) — see `PRD/PLAN/TODO_player.md` | `[ ]` | — |
+| P0 | player-arsenal: factor Gemini client to `shared/llm_client.py` (referee+player reuse) | `[x]` | 319c451 |
+| ▶ P1–P7 | **player-arsenal triplet** (READ/CONTROL/Reflexion/Best-of-N) — see `PRD/PLAN/TODO_player.md` | `[ ]` | — |
 | J | experiment sweep (resumable, throttled to Gemini free tier) + results JSONL + analysis notebook | `[ ]` | — |
 | K | cross-cutting quality gates — asserted every phase | `[~]` | ongoing |
 
