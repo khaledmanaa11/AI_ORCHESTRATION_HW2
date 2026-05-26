@@ -56,7 +56,7 @@
     },
     "match": {
       "motion": "AI is beneficial",
-      "evidence_pack": "pack_001",
+      "evidence_pack": "evidence_pack_primary",
       "seed": 42,
       "run_id": "run_001",
       "results_dir": "results"

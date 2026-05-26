@@ -17,13 +17,32 @@ def base_context():
     return PlayerContext(
         state={
             "motion": "AI should be regulated.",
-            "phase": "PRO_OPENING",
+            "phase": "OPENING",
+            "turn_number": 1,
+            "transcript": [
+                {
+                    "turn_number": 1,
+                    "side": "PRO",
+                    "phase": "OPENING",
+                    "utterance": "AI improves diagnostic speed.",
+                    "referee_tell": "Strong evidence focus.",
+                    "referee_flag": None,
+                }
+            ],
             "rules_snapshot": {
                 "word_cap": 200,
                 "must_engage": True,
             },
         },
-        legal_moves=[],
+        legal_moves=[
+            {
+                "turn_number": 2,
+                "side": "CON",
+                "phase": "OPENING",
+                "word_cap": 180,
+                "must_engage": False,
+            }
+        ],
         rubric={"criteria": ["logic"], "weights": {"logic": 100}},
         evidence_pack={"DOC-001": "some data"},
         side="PRO",
@@ -59,6 +78,15 @@ def test_output_schema_requests_json_and_drafts(base_context, base_config):
     assert "reflexion_lesson" in prompt_str
     assert "candidate_drafts" in prompt_str
     assert "generate exactly 4 drafts" in prompt_str
+
+
+def test_prompt_includes_public_transcript_and_legal_move(base_context, base_config):
+    prompt_str, _ = build_player_prompt(base_context, base_config)
+    assert "Turn: 2" in prompt_str
+    assert "word cap 180" in prompt_str
+    assert "must-engage opponent: False" in prompt_str
+    assert "AI improves diagnostic speed." in prompt_str
+    assert "Strong evidence focus." in prompt_str
 
 
 def test_off_roster_contains_no_control_vocabulary(base_context, base_config):
@@ -177,5 +205,4 @@ def test_object_config_traversal(base_context):
     from agent_arena.services.player.brain.player_prompts import _get_val
     assert _get_val(config, ["debate", "non_existent"], "fallback") == "fallback"
     assert _get_val(config, ["debate", "player", "non_existent"], "fallback") == "fallback"
-
 

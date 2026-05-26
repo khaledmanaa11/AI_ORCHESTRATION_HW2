@@ -30,6 +30,23 @@ def _get_val(obj: Any, keys: list[str], default: Any) -> Any:
     return curr
 
 
+def _format_transcript(state: dict[str, Any]) -> str:
+    transcript = state.get("transcript", [])
+    if not transcript:
+        return "No prior turns."
+
+    rows = []
+    for turn in transcript:
+        tell = turn.get("referee_tell") or "none"
+        flag = turn.get("referee_flag") or "none"
+        rows.append(
+            f"T{turn.get('turn_number')} {turn.get('side')} {turn.get('phase')}: "
+            f"{turn.get('utterance', '')}\n"
+            f"Referee tell: {tell}; flag: {flag}"
+        )
+    return "\n".join(rows)
+
+
 def build_player_prompt(context: PlayerContext, config: Any) -> tuple[str, dict[str, Any]]:
     """Assemble structured-output prompt for one player turn (BS-1, RP2.1-RP2.6)."""
     best_of_n = _get_val(config, ["debate", "player", "best_of_N"], 3)
@@ -58,10 +75,13 @@ def build_player_prompt(context: PlayerContext, config: Any) -> tuple[str, dict[
 
     state = context.state or {}
     rules = state.get("rules_snapshot", {})
+    legal = context.legal_moves[0] if context.legal_moves else {}
     motion = state.get("motion", "")
-    phase = state.get("phase", "UNKNOWN")
-    word_cap = rules.get("word_cap", 250)
-    must_engage = rules.get("must_engage", True)
+    turn_number = legal.get("turn_number", state.get("turn_number", 0) + 1)
+    phase = legal.get("phase", state.get("phase", "UNKNOWN"))
+    word_cap = legal.get("word_cap", rules.get("word_cap", 250))
+    must_engage = legal.get("must_engage", phase in ("REBUTTAL", "CLOSING"))
+    transcript_str = _format_transcript(state)
 
     lessons = [str(x) for x in context.scratchpad if isinstance(x, str)]
     lessons_str = "\n".join(f"- {lesson}" for lesson in lessons) if lessons else "None"
@@ -69,8 +89,10 @@ def build_player_prompt(context: PlayerContext, config: Any) -> tuple[str, dict[
     prompt_parts = [
         f"You are a debater on side: {context.side}.",
         f"Motion: {motion}",
+        f"Turn: {turn_number}",
         f"Phase: {phase}",
         f"Constraints: word cap {word_cap}, must-engage opponent: {must_engage}",
+        f"Public transcript and referee tells so far:\n{transcript_str}",
         f"Rubric: {json.dumps(context.rubric)}",
         f"Evidence Pack: {json.dumps(context.evidence_pack)}",
         f"Prior reflexion lessons:\n{lessons_str}",

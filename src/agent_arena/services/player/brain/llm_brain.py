@@ -93,9 +93,11 @@ class LLMPlayerBrain(PlayerBrain):
         trace = {
             "match_id": _get_val(context.state, ["match_id"], ""),
             "seed": context.seed,
-            "turn_number": _get_val(context.state, ["turn_number"], 0),
+            "turn_number": _get_val(context.legal_moves[0], ["turn_number"], 0)
+            if context.legal_moves else _get_val(context.state, ["turn_number"], 0),
             "side": context.side,
-            "phase": _get_val(context.state, ["phase"], ""),
+            "phase": _get_val(context.legal_moves[0], ["phase"], "")
+            if context.legal_moves else _get_val(context.state, ["phase"], ""),
             "read_profile": parsed_turn.read_profile,
             "selected_vectors": selected_vectors,
             "candidate_drafts": parsed_turn.candidate_drafts,
