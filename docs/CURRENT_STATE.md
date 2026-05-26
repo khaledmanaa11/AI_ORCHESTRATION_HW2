@@ -17,20 +17,25 @@ Do not use the outer `HW2` repo as source of truth.
 Latest implementation commit:
 
 ```text
-8a5c372 fix(player): include transcript and real evidence pack
+f1cc665 fix(shared/llm-client): honor server retry-after on 429 backoff
 ```
 
-There may be a newer docs-only handoff commit after this line. `8a5c372` is the last code/runtime
-state described here.
+Docs-only commits (devlog) sit on top of this. `f1cc665` is the last code/runtime state.
 
-Recent important commits:
+Recent important commits (2026-05-26 live-testing session):
 
 ```text
-8a5c372 fix(player): include transcript and real evidence pack
-55b8e13 fix(config): use current Gemini flash lite model
-20ac986 feat(cli): run visible Gemini debates
-241fa15 feat(player): complete arsenal and experiment harness
+52a964d docs(devlog): append Round 4 finale
+04ca9c4 docs(devlog): commit verbatim terminal captures
+4611d97 docs(devlog): capture the first-live-LLM-match session
+f1cc665 fix(shared/llm-client): honor server retry-after on 429 backoff
+c990cd1 chore(config,docs): set locked primary motion; refresh roadmap
+94106f7 fix(shared/llm-client): migrate to google.genai SDK
 ```
+
+The full story of this session (the referee schema crash, the SDK migration, both quota
+walls, and the fixes) is in `docs/devlog/2026-05-26-first-live-llm-match.md` with verbatim
+terminal captures under `docs/devlog/captures/`.
 
 ## Phase State
 
@@ -68,12 +73,12 @@ The `.env` file contains `GOOGLE_API_KEY`. Never open it, print it, or commit it
 
 ## Last Verification
 
-Last full gate:
+Last full gate (after the google.genai migration + backoff fix):
 
 ```text
 uv run pytest -q
 272 passed
-coverage 93.27%
+coverage 94.19%
 ```
 
 Last lint:
@@ -83,11 +88,8 @@ ruff check src tests
 clean
 ```
 
-Known warning:
-
-```text
-google.generativeai is deprecated; migrate to google.genai later.
-```
+Known warnings: none. The `google.generativeai` deprecation warning is GONE — the client
+was migrated to `google.genai` (commit 94106f7).
 
 ## How To Run
 
@@ -136,23 +138,32 @@ results/run_001/
 
 These generated JSONL files are ignored by git.
 
-## Gemini Quota Notes
+## Gemini Quota Notes (MEASURED 2026-05-26 — this is the real blocker)
 
-If a player or referee fails with `429` and `limit: 0`, the API key is being accepted but the
-Google AI Studio project has no quota for that model at that moment. This is not a repo bug.
-
-Check:
+`gemini-2.5-flash-lite` free tier enforces TWO caps simultaneously:
 
 ```text
-https://aistudio.google.com/rate-limit
+10 requests / MINUTE  (GenerateRequestsPerMinutePerProjectPerModel-FreeTier)
+20 requests / DAY     (GenerateRequestsPerDayPerProjectPerModel-FreeTier)
 ```
 
-Options are to wait for reset, use another Google Cloud project/API key, or enable billing.
+- The **per-minute** cap is now handled in code: `llm_client.py` parses the server's
+  `retry in Xs` and sleeps that long (commit f1cc665). A `429` burst no longer aborts a match.
+- The **per-day** cap CANNOT be paced around. One full LLM-referee match needs ~40 calls
+  (10 player moves x best_of_N=3 + per-turn referee evals + verdict), so the 20/day cap
+  cannot fund even a single full match. On 2026-05-26 we exhausted two separate keys' daily
+  allowances and never completed a clean 10-turn debate.
+
+Check usage: `https://aistudio.google.com/rate-limit`
 
 ## Next Useful Work
 
-1. Run a clean match after commit `8a5c372`.
-2. Inspect transcript quality and `results/` JSONL.
-3. Run a small sweep only after quota is stable.
+1. **Pick a quota path to finish a match** (the only real blocker):
+   - cheapest: `debate.player.best_of_N` -> 1 and use `--brain simple` referee (~10 calls/match);
+   - real fix: enable billing on a Google project (also the only way Module J's 250-400-match
+     sweep can ever run);
+   - or use a model with a higher daily free cap.
+2. Run a clean match on the latest code (`f1cc665`) once quota allows.
+3. Inspect transcript quality and `results/` JSONL.
 4. Use `notebooks/analysis.ipynb` for reporting.
-5. Optional cleanup: migrate from `google.generativeai` to `google.genai`.
+5. Context for whatever happened: read `docs/devlog/2026-05-26-first-live-llm-match.md`.

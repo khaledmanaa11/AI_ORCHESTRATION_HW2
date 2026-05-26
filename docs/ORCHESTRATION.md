@@ -14,25 +14,29 @@ Do not use the outer `HW2` repo as source of truth.
 
 **Detailed fresh-session handoff:** read `docs/CURRENT_STATE.md`.
 
-**Latest implementation commit:** `8a5c372 fix(player): include transcript and real evidence pack`.
-There may be a newer docs-only handoff commit after this line.
+**Latest implementation commit:** `f1cc665 fix(shared/llm-client): honor server retry-after on 429
+backoff`. Docs-only devlog commits (up to `52a964d`) sit on top.
 
-**Project state:** the build phases are complete. Referee/debate core is done; Gemini referee
-brain is wired; player arsenal P0-P7 is done; Module J sweep harness, evidence pack, JSONL
-streams, and notebook are present. We are now in **experiment/run/report mode**, not feature-build
-mode.
+**Project state:** the build phases are complete and we are in **experiment/run/report mode**.
+Referee/debate core, both referee brains, player arsenal P0-P7, and Module J are all done. As of
+the 2026-05-26 live-testing session the LLM path is FIXED and runnable — see below.
 
-**Recent fixes after the first live run:**
-- `20ac986` made `uv run referee` / `uv run player` real runnable CLIs and added
-  `--show-transcript`.
-- `55b8e13` changed the default model from quota-blocked `gemini-2.0-flash` to
-  `gemini-2.5-flash-lite`.
-- `8a5c372` pointed config to `evidence_pack_primary` and inserted the public transcript/referee
-  tells into the player prompt.
+**2026-05-26 live-testing session (full play-by-play: `docs/devlog/2026-05-26-first-live-llm-match.md`):**
+- `94106f7` migrated the LLM client from the deprecated `google.generativeai` to `google.genai` —
+  the old proto Schema rejected the `maximum` field Pydantic emits for the referee's
+  `Field(ge=0, le=10)` scores, crashing every LLM referee evaluation. Fixed + deprecation warning gone.
+- `c990cd1` set the config motion to the locked primary motion (was placeholder "AI is beneficial")
+  and refreshed the roadmap table to run mode.
+- `f1cc665` made the 429 backoff honor the server's `retry in Xs` (was a too-short 1-2s), so the
+  referee now recovers from per-minute rate-limit bursts instead of aborting.
 
-**Last verified gates:** `uv run pytest -q` -> `272 passed`, coverage `93.27%`.
-`ruff check src tests` -> clean. The only warning is that `google.generativeai` is deprecated and
-should eventually migrate to `google.genai`.
+**THE blocker is Gemini free-tier quota, not code:** `gemini-2.5-flash-lite` enforces 10 req/MINUTE
+AND 20 req/DAY. Code now paces around the per-minute cap; the per-day cap cannot be paced and is too
+small to fund one full match (~40 calls). To finish a match: `best_of_N`->1 + `--brain simple`, or
+enable billing, or a higher-daily-cap model. See CURRENT_STATE.md "Gemini Quota Notes".
+
+**Last verified gates:** `uv run pytest -q` -> `272 passed`, coverage `94.19%`.
+`ruff check src tests` -> clean. No warnings (deprecation removed).
 
 **Secrets:** `.env` exists locally with `GOOGLE_API_KEY`; never open it or print it. It is ignored by
 git.
