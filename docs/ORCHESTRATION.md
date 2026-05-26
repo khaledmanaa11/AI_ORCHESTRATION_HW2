@@ -7,6 +7,60 @@ developer prompt. **Never make the director re-explain context.**
 
 ---
 
+## Current handoff (2026-05-26)
+
+**Active repo:** `C:\Users\Hp\OneDrive\Desktop\Semester6\ORCHISTRATION_AI\HW2\AI_ORCHESTRATION_HW2`.
+Do not use the outer `HW2` repo as source of truth.
+
+**Detailed fresh-session handoff:** read `docs/CURRENT_STATE.md`.
+
+**Latest implementation commit:** `8a5c372 fix(player): include transcript and real evidence pack`.
+There may be a newer docs-only handoff commit after this line.
+
+**Project state:** the build phases are complete. Referee/debate core is done; Gemini referee
+brain is wired; player arsenal P0-P7 is done; Module J sweep harness, evidence pack, JSONL
+streams, and notebook are present. We are now in **experiment/run/report mode**, not feature-build
+mode.
+
+**Recent fixes after the first live run:**
+- `20ac986` made `uv run referee` / `uv run player` real runnable CLIs and added
+  `--show-transcript`.
+- `55b8e13` changed the default model from quota-blocked `gemini-2.0-flash` to
+  `gemini-2.5-flash-lite`.
+- `8a5c372` pointed config to `evidence_pack_primary` and inserted the public transcript/referee
+  tells into the player prompt.
+
+**Last verified gates:** `uv run pytest -q` -> `272 passed`, coverage `93.27%`.
+`ruff check src tests` -> clean. The only warning is that `google.generativeai` is deprecated and
+should eventually migrate to `google.genai`.
+
+**Secrets:** `.env` exists locally with `GOOGLE_API_KEY`; never open it or print it. It is ignored by
+git.
+
+**Run a visible real-player match with cheap/simple referee:**
+
+```powershell
+uv run referee --config config/setup.json --brain simple --move-timeout 120 --show-transcript
+uv run player --config config/setup.json --name PlayerA --brain llm
+uv run player --config config/setup.json --name PlayerB --brain llm
+```
+
+**Run with real Gemini referee too:**
+
+```powershell
+uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript
+uv run player --config config/setup.json --name PlayerA --brain llm
+uv run player --config config/setup.json --name PlayerB --brain llm
+```
+
+If Gemini returns `429` with `limit: 0`, it is an AI Studio project quota issue, not a repo bug.
+Check `https://aistudio.google.com/rate-limit`, wait for reset, use a different project, or enable
+billing if desired.
+
+Generated match files live under `results/` and are ignored by git.
+
+---
+
 ## Roles
 
 - **Director (Khaled):** says *"next phase"*. Hands prompts to the developer, pastes the
