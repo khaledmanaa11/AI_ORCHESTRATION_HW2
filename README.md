@@ -104,7 +104,7 @@ All operational values live in `config/setup.json`. No hardcoded values appear i
 | `game.lobby_timeout_seconds` | float | `30.0` | Maximum wait for all players to register; expired lobby closes gracefully |
 | `game.heartbeat_interval_seconds` | float | `5.0` | Interval between keep-alive heartbeat messages |
 | `framing.max_frame_size_bytes` | int | `10485760` | Maximum TCP frame payload size (10 MiB) |
-| `llm.model_name` | string | `"gemini-2.0-flash"` | Gemini model used by LLM brains in Phase 2 |
+| `llm.model_name` | string | `"gemini-2.5-flash-lite"` | Gemini model used by LLM brains in Phase 2 |
 
 Logging is configured separately in `config/logging_config.json`.
 

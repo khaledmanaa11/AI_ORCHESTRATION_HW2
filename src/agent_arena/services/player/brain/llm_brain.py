@@ -40,7 +40,7 @@ class LLMPlayerBrain(PlayerBrain):
         prompt_str, _ = build_player_prompt(context, self._config)
 
         # 2. Get LLM model name from config
-        model_name = _get_val(self._config, ["llm", "model_name"], "gemini-2.0-flash")
+        model_name = _get_val(self._config, ["llm", "model_name"], "gemini-2.5-flash-lite")
 
         # 3. Make exactly one LLM call
         raw_output = self._client.generate_text(prompt_str, model_name)

@@ -50,7 +50,7 @@ class LLMCallerMixin:
 class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
     """LLM-backed referee brain using Gemini."""
 
-    def __init__(self, model_name: str = "gemini-2.0-flash"):
+    def __init__(self, model_name: str = "gemini-2.5-flash-lite"):
         self._model_name = model_name
         self._client = LLMClient()
 
