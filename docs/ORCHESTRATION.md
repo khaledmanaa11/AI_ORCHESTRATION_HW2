@@ -103,14 +103,16 @@ One logical phase per commit. Push command: `git push origin master`.
 | G | config/debate block + validation | `[x]` | 7dafdf8 |
 | H | integration gate (real engine+brain → reproducible GAME_OVER) | `[x]` | 0e9434a |
 | I | Gemini `LLMRefereeBrain` (swap-only) | `[x]` | e9cc7f8 |
-| ▶ I.5 | **judge-prompt hardening** (3 arms carry rubric/motion/transcript; arms differ substantively) | `[ ]` | — |
+| I.5 | **judge-prompt hardening** (3 arms carry rubric/motion/transcript; arms differ substantively) | `[x]` | 0053d55 |
+| ▶ P0–P7 | **player-arsenal triplet** (READ/CONTROL/Reflexion/Best-of-N) — see `PRD/PLAN/TODO_player.md` | `[ ]` | — |
 | J | experiment sweep (resumable, throttled to Gemini free tier) + results JSONL + analysis notebook | `[ ]` | — |
 | K | cross-cutting quality gates — asserted every phase | `[~]` | ongoing |
 
-**Parallel track still UNWRITTEN (needed before J yields real data):** the **player-arsenal triplet**
-(`PRD/PLAN/TODO`) — the judge-manipulation engine (control tools, Mentalist READ profiling,
-Best-of-N judge-mock selection, Reflexion scratchpad). Module J assumes this exists. Decide whether
-to build it between I.5 and J.
+**Player-arsenal triplet — WRITTEN (2026-05-26):** `docs/PRD_player.md`, `docs/PLAN_player.md`,
+`docs/TODO_player.md`. Build-shape locked: one structured Gemini call/turn (BS-1), deterministic
+Best-of-N selector (BS-2), shared LLM client (BS-3), A+ seed reproducibility (BS-4), per-process
+stream files + post-game dump (BS-5). Build order `P0→P7`; **resume at P0** (factor the Gemini
+client to `shared/`). Module J (the sweep) consumes this triplet's stream-b output.
 
 **Reference docs:** `docs/TODO_referee.md` (actionable spec), `docs/PRD_referee.md` (requirements),
 `docs/PLAN_referee.md` (design), `docs/DESIGN_LEDGER.md` (rationale of record).
