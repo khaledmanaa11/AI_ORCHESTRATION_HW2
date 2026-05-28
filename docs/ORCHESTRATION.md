@@ -7,15 +7,26 @@ developer prompt. **Never make the director re-explain context.**
 
 ---
 
-## Current handoff (2026-05-26)
+## Current handoff (2026-05-28)
 
 **Active repo:** `C:\Users\Hp\OneDrive\Desktop\Semester6\ORCHISTRATION_AI\HW2\AI_ORCHESTRATION_HW2`.
 Do not use the outer `HW2` repo as source of truth.
 
-**Detailed fresh-session handoff:** read `docs/CURRENT_STATE.md`.
+**Detailed fresh-session handoff:** read `docs/CURRENT_STATE.md` and the latest devlog under
+`docs/devlog/` (most recent: `2026-05-28-llm-provider-seam.md`).
 
-**Latest implementation commit:** `f1cc665 fix(shared/llm-client): honor server retry-after on 429
-backoff`. Docs-only devlog commits (up to `52a964d`) sit on top.
+**2026-05-28 — LLM provider seam landed.** `shared/llm_client.py` now dispatches between
+`GoogleGenAIClient` (AI Studio key, default) and `GeminiCLIClient` (subprocess to the official
+`gemini` CLI, OAuth via personal Google account, ~60 RPM / 1000 RPD on Gemini 2.5 Pro). Selection
+is driven by `llm.provider` in `config/setup.json` and threaded through
+`LLMRefereeBrain(provider=...)` and `LLMClient(provider=...)` at both production callsites
+(`apps/run_helpers.py`, `apps/sweep_runner.py`, `services/player/agent.py`). `LLM_PROVIDER` env
+var is kept only as an ad-hoc override. Full rationale + switch-instructions in
+`docs/devlog/2026-05-28-llm-provider-seam.md`. **Tests: 225 passed.** Not yet committed at the
+time of this handoff write — orchestrator should commit before pushing.
+
+**Latest implementation commit (before today's seam):** `f1cc665 fix(shared/llm-client): honor
+server retry-after on 429 backoff`. Docs-only devlog commits (up to `52a964d`) sit on top.
 
 **Project state:** the build phases are complete and we are in **experiment/run/report mode**.
 Referee/debate core, both referee brains, player arsenal P0-P7, and Module J are all done. As of
@@ -182,5 +193,11 @@ run recipe. `notebooks/analysis.ipynb` is the reporting surface once a sweep has
 **Reference docs:** `docs/TODO_referee.md` (actionable spec), `docs/PRD_referee.md` (requirements),
 `docs/PLAN_referee.md` (design), `docs/DESIGN_LEDGER.md` (rationale of record).
 
-**Model provider:** Google Gemini via AI Studio **free** API key (`GOOGLE_API_KEY` env). Rate limits,
-not cost, are the constraint for J. Tests are always offline (mock the client).
+**Model provider:** dispatched by `llm.provider` in `config/setup.json`. Two backends:
+- `"google"` (default) → AI Studio key (`GOOGLE_API_KEY` env). 20 req/day on `flash-lite`.
+- `"gemini-cli"` → subprocess to `gemini` CLI (`npm i -g @google/gemini-cli` + one-time `gemini`
+  OAuth). ~1000 req/day on `gemini-2.5-pro` via Code Assist for individuals.
+
+Rate limits, not cost, are the constraint for J. Tests are always offline (mock the client).
+The `gemini-cli` path is not portable for the professor's reproduction — keep AI Studio key as the
+artifact-canonical backend, use `gemini-cli` for local sweeps.

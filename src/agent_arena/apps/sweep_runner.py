@@ -136,7 +136,7 @@ def run_sweep(
 ) -> None:
     """Run full sweep study over parameters (RJ2.1)."""
     config = load_setup_config(config_path)
-    ref_brain = SimpleRefereeBrain() if offline else LLMRefereeBrain()
+    ref_brain = SimpleRefereeBrain() if offline else LLMRefereeBrain(provider=config.llm.provider)
     results_dir = Path(config.debate.match.results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
 

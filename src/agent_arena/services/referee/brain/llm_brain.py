@@ -50,9 +50,9 @@ class LLMCallerMixin:
 class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
     """LLM-backed referee brain using Gemini."""
 
-    def __init__(self, model_name: str = "gemini-2.5-flash-lite"):
+    def __init__(self, model_name: str = "gemini-2.5-flash-lite", provider: str = "google"):
         self._model_name = model_name
-        self._client = LLMClient()
+        self._client = LLMClient(provider=provider)
 
     def decide(self, context: RefereeContext) -> RefereeDecision:
         if context.request_kind == RequestKind.EVALUATE_TURN:

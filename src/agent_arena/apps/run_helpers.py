@@ -15,7 +15,7 @@ from agent_arena.shared.config import SetupConfig
 def build_referee_brain(config: SetupConfig, choice: str):
     """Build the configured referee brain for CLI entry points."""
     if choice == "llm":
-        return LLMRefereeBrain(config.llm.model_name)
+        return LLMRefereeBrain(model_name=config.llm.model_name, provider=config.llm.provider)
     return SimpleRefereeBrain()
 
 

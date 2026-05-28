@@ -84,7 +84,7 @@ class PlayerAgent:
                 if choice == "llm":
                     from agent_arena.services.player.brain.llm_brain import LLMPlayerBrain
                     from agent_arena.shared.llm_client import LLMClient
-                    self.brain = LLMPlayerBrain(client=LLMClient(), config=self.config)
+                    self.brain = LLMPlayerBrain(client=LLMClient(provider=self.config.llm.provider), config=self.config)
                 else:
                     self.brain = SeededPlayerBrain(self.seed, self.role)
         elif t == MessageType.MOVE_REQUEST:
