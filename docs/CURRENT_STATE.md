@@ -83,6 +83,19 @@ The `.env` file contains `GOOGLE_API_KEY`. Never open it, print it, or commit it
 
 ## Last Verification
 
+Last live match (Run 4 — gatekeeper live validation, S1):
+
+```text
+commit:   ebbd818
+match:    c4229c3e-0e26-44ca-a237-dd7babe3ba07
+verdict:  CON wins, margin -0.46
+turns:    10/10 clean, 0 forfeits
+503s:     1 cluster of length 1, auto-recovered
+gatekeeper: no breaker trip, no exhaustion
+```
+
+Devlog: `docs/devlog/2026-05-28-run4-gatekeeper-live.md`. S1 gate **passed** — S2–S8 unblocked.
+
 Last full gate (after the google.genai migration + backoff fix):
 
 ```text

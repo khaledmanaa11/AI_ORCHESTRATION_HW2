@@ -41,11 +41,11 @@ silently re-open the row.
 
 ## S1 — Run 4: gatekeeper live validation
 
-- [ ] **S1.1** Execute Run 4 with `uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript` and two `uv run player` terminals on `--brain llm`. *DoD:* match runs to verdict.
-- [ ] **S1.2** Capture the httpx log, count 503 clusters, record their lengths. *DoD:* numbers recorded in S1.4 devlog.
-- [ ] **S1.3** Inspect the verdict JSON for `flag` fields and the gatekeeper `api_state` block. *DoD:* every flag categorized as `success`, `timeout`, or `quota_aborted`.
-- [ ] **S1.4** Write `docs/devlog/2026-05-28-run4-gatekeeper-live.md` with: command, 503 cluster counts, breaker trips, verdict, gatekeeper snapshot, judgement (pass / fail / fix-needed). *DoD:* devlog committed.
-- [ ] **S1.5** Update `CURRENT_STATE.md` "Last Verification" with the Run 4 commit and match-id. *DoD:* file updated; commit message follows the project style.
+- [x] **S1.1** Execute Run 4 with `uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript` and two `uv run player` terminals on `--brain llm`. *DoD:* match runs to verdict. *(match `c4229c3e`, CON −0.46.)*
+- [x] **S1.2** Capture the httpx log, count 503 clusters, record their lengths. *DoD:* numbers recorded in S1.4 devlog. *(1 cluster of length 1, recovered.)*
+- [x] **S1.3** Inspect the verdict JSON for `flag` fields and the gatekeeper `api_state` block. *DoD:* every flag categorized as `success`, `timeout`, or `quota_aborted`. *(no flags on any turn → all success; `api_state` not yet serialized to disk — follow-up noted in devlog.)*
+- [x] **S1.4** Write `docs/devlog/2026-05-28-run4-gatekeeper-live.md` with: command, 503 cluster counts, breaker trips, verdict, gatekeeper snapshot, judgement (pass / fail / fix-needed). *DoD:* devlog committed. *(judgement: **pass**.)*
+- [x] **S1.5** Update `CURRENT_STATE.md` "Last Verification" with the Run 4 commit and match-id. *DoD:* file updated; commit message follows the project style.
 
 **Gate:** if S1.4 concludes "fix-needed", stop. Open a follow-up triplet.
 Do not start S2/S3 with a broken gatekeeper.

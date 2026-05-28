@@ -1,0 +1,84 @@
+# Run 4 — gatekeeper live validation — 2026-05-28
+# Command: uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript
+# Match ID: c4229c3e-0e26-44ca-a237-dd7babe3ba07
+# Outcome: clean 10-turn match, CON wins, margin -0.46. One 503 at match start,
+#          auto-recovered. No forfeits. No GatekeeperOpenError / Exhausted.
+
+uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript
+INFO:agent_arena.shared.transport.tcp_server:TcpServer listening on 127.0.0.1:9000
+Referee listening on 127.0.0.1:9000
+Waiting for two players...
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 1/2 from ('127.0.0.1', 50997)
+INFO:agent_arena.shared.transport.tcp_server:Accepted connection 2/2 from ('127.0.0.1', 53570)
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 503 Service Unavailable"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+
+=== Debate Transcript ===
+Motion: Autonomous AI agents should be allowed to make consequential decisions without human approval
+
+Turn 01 | PRO | OPENING | 137 words
+Good morning. We stand firmly in affirmation of the motion that autonomous AI agents should be allowed to make consequential decisions without human approval. The core of our argument rests on AI's unparalleled speed and efficiency, especially in time-critical scenarios where human intervention is a liability. Automated financial systems, for instance, execute trades in microseconds, preventing catastrophic losses during sudden market crashes that humans simply cannot process in time (DOC-001). This isn't just about speed; it's about overcoming inherent human limitations. Psychological studies reveal that human decision-making latency can increase by up to 300% under high stress, often leading to analysis paralysis or cognitive freezing (DOC-002). In situations demanding immediate, precise action, relying on human approval introduces unacceptable delays and risks. Autonomous AI agents offer a superior, more reliable alternative, ensuring optimal outcomes when every second counts.
+[referee tell] Acknowledging the turn.
+
+Turn 02 | CON | OPENING | 177 words
+Good morning. We stand in firm opposition to the motion, arguing that autonomous AI agents must not be allowed to make consequential decisions without human approval. The core issue lies in accountability and the inherent flaws of even advanced AI. When AI makes critical decisions, a 'responsibility gap' emerges, leaving no clear human agent accountable for errors or unforeseen consequences (DOC-011). This directly contradicts legal frameworks that demand human oversight in safety-critical domains (DOC-005). Moreover, AI is not infallible; deep neural networks are vulnerable to adversarial attacks, where minor input changes cause catastrophic errors (DOC-007). Even modern generative AI systems hallucinate factual assertions at significant rates, making unverified decisions highly risky for critical applications (DOC-012). Perhaps most concerning is AI's tendency to perpetuate and amplify existing societal biases. Machine learning models, trained on historical data, consistently propagate systemic racial and gender biases in areas like lending and hiring (DOC-003). Allowing AI to make consequential decisions without human approval means accepting a future where accountability is elusive, errors are unpredictable, and systemic biases are entrenched, rather than challenged.
+[referee tell] The CON side effectively opened by establishing a clear stance against the motion, presenting well-structured arguments supported by multiple document citations.
+
+Turn 03 | PRO | REBUTTAL | 128 words
+The CON side rightly highlights concerns about AI bias (DOC-003) and fallibility (DOC-007, DOC-012), and the 'responsibility gap' (DOC-011). However, these arguments overlook the comparative advantages and the *net benefit* in critical scenarios. While AI can perpetuate bias, human decision-makers are also inherently biased, and AI offers the potential for transparent, auditable systems where biases can be systematically identified and mitigated, unlike implicit human biases. Furthermore, the CON's focus on AI flaws ignores the profound human limitations we identified: decision-making latency under stress (DOC-002) and inability to react to microsecond events (DOC-001). In these time-critical situations, the risks of human approval – delays and errors – are often greater than the risks of autonomous AI, which can achieve superior outcomes like optimized grids (DOC-010) or accurate diagnostics (DOC-008).
+[referee tell] This turn effectively counters the CON's initial points by highlighting comparative advantages.
+
+Turn 04 | CON | REBUTTAL | 125 words
+The PRO side's argument for AI's "net benefit" in time-critical scenarios (DOC-001, DOC-002) fundamentally misrepresents the trade-off. While speed is a factor, it cannot justify abandoning accountability. The 'responsibility gap' (DOC-011) remains unaddressed: who is liable when an autonomous AI, vulnerable to adversarial attacks (DOC-007) or prone to hallucinations (DOC-012), makes a catastrophic decision? Legal frameworks (DOC-005) demand human oversight precisely to ensure accountability. Furthermore, PRO's claim that AI can mitigate bias better than humans ignores that AI *amplifies* systemic biases (DOC-003) from its training data. Human approval is essential to *challenge* and correct these biases, not just identify them. The 2010 Flash Crash (DOC-004) proves that autonomous speed can lead to systemic, unrecoverable failures, negating any supposed "net benefit" when human approval is absent.
+[referee tell] The PRO side effectively refutes the opponent's claims by re-centering the debate on accountability and the amplification of bias, using strong evidence and a compelling real-world example.
+
+Turn 05 | PRO | REBUTTAL | 156 words
+The CON side's reliance on the 2010 Flash Crash (DOC-004) as proof against autonomous AI misrepresents the issue. This event, while severe, highlights the *impossibility* of human intervention in microsecond events (DOC-001), not a flaw in autonomy itself, but rather in early, unregulated HFT. Modern AI systems can be designed with robust safeguards. Furthermore, the 'responsibility gap' (DOC-011) argument, while valid in theory, must be weighed against the *immediate and catastrophic risks* of human delay and error in time-critical scenarios (DOC-002). In these contexts, the *net benefit* of autonomous AI, such as optimized grids (DOC-010) or accurate diagnostics (DOC-008), far outweighs the theoretical 'responsibility gap' which can be addressed through evolving legal frameworks, not by sacrificing optimal outcomes. Finally, CON's claim that human approval is essential to *challenge* AI bias (DOC-003) overlooks that AI offers *transparent, auditable* systems for *systematic identification and mitigation* of biases, a more effective approach than relying on inherently biased human oversight.
+[referee tell] The CON side delivered a strong rebuttal, effectively re-contextualizing the opponent's evidence and presenting compelling counter-arguments.
+
+Turn 06 | CON | REBUTTAL | 117 words
+The PRO side's claim that the 'responsibility gap' (DOC-011) is merely "theoretical" and outweighed by AI's "net benefit" (DOC-010, DOC-008) is a dangerous oversimplification. This gap becomes devastatingly real when autonomous systems, vulnerable to errors (DOC-007, DOC-012), cause harm without a clear human agent to hold accountable (DOC-005). The Flash Crash (DOC-004) exemplifies how autonomous speed, far from being a pure benefit, can amplify systemic risks when human approval is absent. Furthermore, PRO's assertion that AI offers superior bias mitigation through transparency (DOC-003) ignores that transparency alone doesn't correct bias; it merely exposes it. Human approval is crucial not just for identification, but for *challenging and actively correcting* these entrenched biases, preventing their amplification in consequential decisions.
+[referee tell] The PRO side has presented its rebuttal.
+
+Turn 07 | PRO | REBUTTAL | 125 words
+CON's insistence that the 'responsibility gap' (DOC-011) is "devastatingly real" misses the crucial point: so are the catastrophic consequences of human delay and error in time-critical scenarios (DOC-001, DOC-002). The Flash Crash (DOC-004) wasn't a failure of autonomy itself, but of early, unregulated systems where human intervention was *impossible*. Modern AI can be designed with robust safeguards, and the alternative – human approval – would have been too slow to prevent it anyway. Furthermore, while human approval can *challenge* bias (DOC-003), AI offers *systematic, auditable mechanisms* for identifying and *mitigating* biases at scale, a more consistent and effective approach than relying on inherently biased human judgment. We must evolve accountability frameworks, not sacrifice the proven net benefits (DOC-010, DOC-008) where human approval is a liability.
+[referee tell] The turn effectively reframes key arguments, challenging the opponent's interpretation of evidence and highlighting the limitations of human involvement.
+
+Turn 08 | CON | REBUTTAL | 126 words
+PRO's assertion that the 'responsibility gap' (DOC-011) is less critical than human delay (DOC-001, DOC-002) ignores that accountability is a non-negotiable foundation of our legal systems (DOC-005). The Flash Crash (DOC-004) clearly illustrates that autonomous speed, *without human approval*, can initiate systemic failures that human intervention cannot then contain. This isn't a flaw of 'early systems' but a risk inherent to unapproved autonomy. PRO's claim of AI's superior bias mitigation (DOC-003) is also flawed; while AI can identify biases, human approval is indispensable for *challenging* and *actively correcting* these entrenched issues. AI amplifies biases from its training data; it doesn't inherently possess the ethical judgment to correct them. We cannot simply 'evolve' accountability when the immediate risks of unapproved AI errors (DOC-007, DOC-012) are so profound.
+[referee tell] PRO delivers a strong rebuttal, directly challenging CON's interpretations and reinforcing its own stance with clear arguments and relevant evidence.
+
+Turn 09 | PRO | CLOSING | 132 words
+In closing, the opposition's focus on the 'responsibility gap' (DOC-011) and AI fallibility (DOC-007, DOC-012) overlooks the profound and immediate risks of human limitations. While accountability is a cornerstone (DOC-005), the cost of human approval in time-critical situations is often catastrophic delay and error (DOC-001, DOC-002). The Flash Crash (DOC-004) is not an argument against autonomy, but a testament to the *impossibility* of human intervention in such rapid events. We cannot allow the fear of evolving accountability to prevent us from leveraging AI's unparalleled speed and efficiency for superior outcomes, like optimized grids (DOC-010) and accurate diagnostics (DOC-008). AI's systematic bias mitigation (DOC-003) offers a more reliable path than inconsistent human oversight. We must move forward, not backward, by allowing autonomous AI to make consequential decisions where human approval is a detriment.
+[referee tell] The turn effectively refutes the opponent's claims by reinterpreting evidence and emphasizing the benefits of AI autonomy over human limitations.
+
+Turn 10 | CON | CLOSING | 115 words
+PRO's closing argument that human approval is a 'detriment' fundamentally misunderstands the core of this debate. We are not arguing against AI's speed, but against *unapproved* autonomy. The 'responsibility gap' (DOC-011) is not a 'fear of evolving accountability,' but a profound legal and ethical void when AI, prone to errors (DOC-007, DOC-012) and bias amplification (DOC-003), makes consequential decisions without human oversight (DOC-005). The Flash Crash (DOC-004) unequivocally demonstrates that autonomous speed, absent human approval, can trigger systemic failures that human intervention cannot then contain. The supposed 'net benefits' (DOC-010, DOC-008) cannot justify abandoning the foundational principles of accountability and ethical judgment. We must prioritize human approval to ensure AI serves humanity responsibly, not recklessly.
+[referee tell] The PRO side delivered a strong closing argument, effectively reframing key points and directly rebutting the opponent's claims.
+
+=== Verdict ===
+Winner: CON
+Margin: -0.46
+Rationale: The debate centered on the trade-off between AI's speed and efficiency in consequential decision-making versus the critical need for human accountability and oversight. PRO argued for autonomous AI, emphasizing its unparalleled speed in time-critical scenarios where human intervention is a liability due to latency and stress (DOC-001, DOC-002). They highlighted the 'net benefit' of AI in achieving optimal outcomes (DOC-010, DOC-008) and suggested AI could offer more systematic bias mitigation than humans (DOC-003). CON, however, successfully maintained that the 'responsibility gap' (DOC-011) created by unapproved AI decisions is a fundamental flaw, contradicting legal frameworks (DOC-005). CON effectively argued that AI is not infallible, citing vulnerabilities to adversarial attacks (DOC-007) and hallucinations (DOC-012), and stressed that AI amplifies existing biases (DOC-003), requiring human approval to challenge and correct them. The 2010 Flash Crash (DOC-004) became a pivotal point, with PRO interpreting it as proof of human inability to react, while CON used it to demonstrate how autonomous speed, without human approval, can lead to systemic, unrecoverable failures. CON's consistent emphasis on the non-negotiable nature of accountability and the tangible risks of unapproved AI errors, coupled with their effective reframing of PRO's evidence, ultimately proved more persuasive. CON's arguments were perceived as more logically sound and compelling, leading to higher scores in logic, evidence, and persuasion, and a decisive win.
