@@ -25,10 +25,39 @@ class GameConfig(BaseModel):
 class FramingConfig(BaseModel):
     max_frame_size_bytes: int = Field(10485760, description="Max frame buffer size in bytes")
 
+class GatekeeperConfig(BaseModel):
+    rpm: int = Field(..., description="Requests per minute budget")
+    rpd: int = Field(..., description="Requests per day budget")
+    max_concurrency: int = Field(..., description="Maximum concurrent outbound LLM requests")
+    breaker_threshold: int = Field(..., description="Retryable failure threshold to open the circuit")
+    breaker_window_seconds: float = Field(..., description="Window for breaker failure counting")
+    breaker_cooldown_seconds: float = Field(..., description="Cooldown duration before half-open probe")
+    acquire_timeout_seconds: float = Field(..., description="Max time to wait for a gatekeeper slot")
+
+    @model_validator(mode="after")
+    def validate_gatekeeper(self) -> "GatekeeperConfig":
+        if self.rpm <= 0:
+            raise ValueError("gatekeeper.rpm must be > 0")
+        if self.rpd <= 0:
+            raise ValueError("gatekeeper.rpd must be > 0")
+        if self.max_concurrency <= 0:
+            raise ValueError("gatekeeper.max_concurrency must be > 0")
+        if self.breaker_threshold <= 0:
+            raise ValueError("gatekeeper.breaker_threshold must be > 0")
+        if self.breaker_window_seconds <= 0.0:
+            raise ValueError("gatekeeper.breaker_window_seconds must be > 0")
+        if self.breaker_cooldown_seconds <= 0.0:
+            raise ValueError("gatekeeper.breaker_cooldown_seconds must be > 0")
+        if self.acquire_timeout_seconds <= 0.0:
+            raise ValueError("gatekeeper.acquire_timeout_seconds must be > 0")
+        return self
+
+
 class LLMConfig(BaseModel):
     provider: str = Field("google", description="LLM provider name")
     model_name: str = Field(..., description="LLM model identifier used by brains")
     generation_seed: int | None = Field(None, description="LLM generation seed")
+    gatekeeper: GatekeeperConfig
 
 # ── Debate config submodels (Module G) ──────────────────────────────
 
