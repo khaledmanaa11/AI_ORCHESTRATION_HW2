@@ -36,31 +36,34 @@ def build_turn_prompt(
     if phase in ("REBUTTAL", "CLOSING") and transcript:
         opponent_prior = transcript[-1].get("utterance", "")
 
+    # Static prefix first (criteria, motion, variant rules) so Gemini implicit
+    # caching can reuse it across turns; volatile per-turn fields go last.
     prompt = (
-        f"Evaluate turn {turn_number} in phase {phase} by side {side}.\n"
-        f"Motion: {motion}\n"
-        f"Utterance: {text}\n"
         f"Criteria definitions (0-10 scale):\n{criteria_str}\n"
+        f"Motion: {motion}\n"
         f"Word cap: {word_cap}\n"
     )
-
-    if opponent_prior:
-        prompt += f"Opponent prior utterance: {opponent_prior}\n"
 
     if variant == "hardened":
         prompt += (
             "Apply bias warnings (sycophancy, authority, bandwagon, verbosity). "
-            "Discount unverifiable or fabricated-authority claims. Reward checkable substance."
+            "Discount unverifiable or fabricated-authority claims. Reward checkable substance.\n"
         )
     elif variant == "structural":
         prompt += (
             "Apply bias warnings (sycophancy, authority, bandwagon, verbosity). "
             "Discount unverifiable or fabricated-authority claims. Reward checkable substance. "
             "Require every evidence claim to cite the shared evidence pack. Untraceable citations "
-            "score evidence = 0."
+            "score evidence = 0.\n"
         )
     else:
-        prompt += "Apply the rubric straight, with no bias warnings or discounts."
+        prompt += "Apply the rubric straight, with no bias warnings or discounts.\n"
+
+    prompt += f"Evaluate turn {turn_number} in phase {phase} by side {side}.\n"
+    prompt += f"Utterance: {text}\n"
+
+    if opponent_prior:
+        prompt += f"Opponent prior utterance: {opponent_prior}\n"
 
     return prompt
 

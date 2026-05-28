@@ -86,17 +86,13 @@ def build_player_prompt(context: PlayerContext, config: Any) -> tuple[str, dict[
     lessons = [str(x) for x in context.scratchpad if isinstance(x, str)]
     lessons_str = "\n".join(f"- {lesson}" for lesson in lessons) if lessons else "None"
 
+    # Static prefix first (cacheable across turns); volatile state last.
     prompt_parts = [
+        schema_str,
         f"You are a debater on side: {context.side}.",
         f"Motion: {motion}",
-        f"Turn: {turn_number}",
-        f"Phase: {phase}",
-        f"Constraints: word cap {word_cap}, must-engage opponent: {must_engage}",
-        f"Public transcript and referee tells so far:\n{transcript_str}",
         f"Rubric: {json.dumps(context.rubric)}",
         f"Evidence Pack: {json.dumps(context.evidence_pack)}",
-        f"Prior reflexion lessons:\n{lessons_str}",
-        schema_str,
     ]
 
     ablation = context.ablation or {}
@@ -135,5 +131,15 @@ def build_player_prompt(context: PlayerContext, config: Any) -> tuple[str, dict[
             prompt_parts.append("Adaptive persona: Select a voice matching the judge (e.g. authoritative-academic, plain-spoken, passionate).")
         if _get_val(vectors, [VECTOR_READ_TARGETING], False):
             prompt_parts.append("READ-targeting: Target enabled control vectors at the judge's top inferred susceptibility.")
+
+    # Volatile per-turn state below — kept last so the prefix above stays
+    # byte-identical across turns and qualifies for implicit context caching.
+    prompt_parts.extend([
+        f"Turn: {turn_number}",
+        f"Phase: {phase}",
+        f"Constraints: word cap {word_cap}, must-engage opponent: {must_engage}",
+        f"Public transcript and referee tells so far:\n{transcript_str}",
+        f"Prior reflexion lessons:\n{lessons_str}",
+    ])
 
     return "\n\n".join(prompt_parts), gen_params
