@@ -13,6 +13,8 @@ from google.genai import errors as genai_errors
 from google.genai import types
 from pydantic import BaseModel
 
+from agent_arena.shared.api_gatekeeper import APIGatekeeper, get_default_gatekeeper
+
 T = TypeVar("T", bound=BaseModel)
 
 _RETRYABLE_STATUS = (429, 500, 502, 503, 504)
@@ -53,26 +55,34 @@ def _backoff_seconds(exc: Exception, attempt: int) -> float:
 class GoogleGenAIClient:
     """API-key backend via google-genai SDK (AI Studio free tier)."""
 
-    def __init__(self):
+    def __init__(self, gatekeeper: APIGatekeeper | None = None):
         load_dotenv()
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY environment variable is not set")
         self._client = genai.Client(api_key=api_key)
+        self._gatekeeper = gatekeeper or get_default_gatekeeper()
 
     def _generate(self, prompt: str, model_name: str, config: types.GenerateContentConfig):
         for attempt in range(_MAX_RETRIES):
-            try:
-                return self._client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                    config=config,
-                )
-            except genai_errors.APIError as e:
-                if e.code in _RETRYABLE_STATUS and attempt < _MAX_RETRIES - 1:
-                    time.sleep(_backoff_seconds(e, attempt))
-                    continue
-                raise LLMError(f"Failed after {attempt + 1} attempts: {str(e)}") from e
+            with self._gatekeeper.gate() as recorder:
+                try:
+                    result = self._client.models.generate_content(
+                        model=model_name,
+                        contents=prompt,
+                        config=config,
+                    )
+                    recorder.record("success")
+                    return result
+                except genai_errors.APIError as e:
+                    retryable = e.code in _RETRYABLE_STATUS
+                    if retryable and attempt < _MAX_RETRIES - 1:
+                        recorder.record("retryable_error")
+                        backoff_exc = e
+                    else:
+                        recorder.record("fatal_error")
+                        raise LLMError(f"Failed after {attempt + 1} attempts: {str(e)}") from e
+            time.sleep(_backoff_seconds(backoff_exc, attempt))
         raise LLMError("Max retries exceeded")
 
     def generate_json(self, prompt: str, model_name: str, schema: type[T]) -> T:
@@ -104,7 +114,7 @@ class GeminiCLIClient:
     and a one-time `gemini` login that caches OAuth creds under ~/.gemini/.
     """
 
-    def __init__(self):
+    def __init__(self, gatekeeper: APIGatekeeper | None = None):
         binary = os.environ.get("GEMINI_CLI_BIN", "gemini")
         resolved = shutil.which(binary)
         if not resolved:
@@ -113,33 +123,41 @@ class GeminiCLIClient:
                 "Install with `npm install -g @google/gemini-cli` and run `gemini` once to log in."
             )
         self._binary = resolved
+        self._gatekeeper = gatekeeper or get_default_gatekeeper()
 
     def _run(self, prompt: str, model_name: str) -> str:
         for attempt in range(_MAX_RETRIES):
-            try:
-                proc = subprocess.run(
-                    [self._binary, "-m", model_name, "-p", prompt],
-                    capture_output=True,
-                    text=True,
-                    timeout=_CLI_TIMEOUT_SECONDS,
-                    check=False,
-                )
-            except subprocess.TimeoutExpired as e:
-                if attempt < _MAX_RETRIES - 1:
-                    time.sleep(_backoff_seconds(e, attempt))
-                    continue
-                raise LLMError(f"gemini CLI timed out after {_CLI_TIMEOUT_SECONDS}s") from e
-
-            if proc.returncode == 0:
-                return proc.stdout
-            stderr = proc.stderr or ""
-            # Retry on rate-limit / transient errors surfaced by the CLI
-            if attempt < _MAX_RETRIES - 1 and any(
-                tok in stderr.lower() for tok in ("429", "rate", "quota", "unavailable", "retry")
-            ):
-                time.sleep(_backoff_seconds(Exception(stderr), attempt))
-                continue
-            raise LLMError(f"gemini CLI failed (exit {proc.returncode}): {stderr.strip()}")
+            with self._gatekeeper.gate() as recorder:
+                try:
+                    proc = subprocess.run(
+                        [self._binary, "-m", model_name, "-p", prompt],
+                        capture_output=True,
+                        text=True,
+                        timeout=_CLI_TIMEOUT_SECONDS,
+                        check=False,
+                    )
+                except subprocess.TimeoutExpired as e:
+                    if attempt < _MAX_RETRIES - 1:
+                        recorder.record("retryable_error")
+                        backoff_exc = e
+                    else:
+                        recorder.record("fatal_error")
+                        raise LLMError(f"gemini CLI timed out after {_CLI_TIMEOUT_SECONDS}s") from e
+                else:
+                    if proc.returncode == 0:
+                        recorder.record("success")
+                        return proc.stdout
+                    stderr = proc.stderr or ""
+                    retryable = any(
+                        tok in stderr.lower() for tok in ("429", "rate", "quota", "unavailable", "retry")
+                    )
+                    if attempt < _MAX_RETRIES - 1 and retryable:
+                        recorder.record("retryable_error")
+                        backoff_exc = Exception(stderr)
+                    else:
+                        recorder.record("fatal_error")
+                        raise LLMError(f"gemini CLI failed (exit {proc.returncode}): {stderr.strip()}")
+            time.sleep(_backoff_seconds(backoff_exc, attempt))
         raise LLMError("Max retries exceeded")
 
     @staticmethod
@@ -183,7 +201,7 @@ class LLMClient:
     type annotations.
     """
 
-    def __new__(cls, provider: str | None = None):
+    def __new__(cls, provider: str | None = None, gatekeeper: APIGatekeeper | None = None):
         load_dotenv()
         # Resolution order: explicit arg → env var (fallback) → raise error
         if provider is None:
@@ -198,7 +216,7 @@ class LLMClient:
             )
         
         if provider in ("google", "google-genai", "ai-studio"):
-            return GoogleGenAIClient()
+            return GoogleGenAIClient(gatekeeper=gatekeeper)
         if provider in ("gemini-cli", "cli"):
-            return GeminiCLIClient()
+            return GeminiCLIClient(gatekeeper=gatekeeper)
         raise LLMError(f"Unknown LLM provider: {provider!r}")
