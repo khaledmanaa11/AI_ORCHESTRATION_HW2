@@ -1,6 +1,6 @@
 # Current Project State
 
-Last updated: 2026-05-26
+Last updated: 2026-05-28
 
 ## Source Of Truth
 
@@ -17,10 +17,16 @@ Do not use the outer `HW2` repo as source of truth.
 Latest implementation commit:
 
 ```text
-f1cc665 fix(shared/llm-client): honor server retry-after on 429 backoff
+04540b1 feat(shared/llm-client): provider seam (google | gemini-cli), config-driven
 ```
 
-Docs-only commits (devlog) sit on top of this. `f1cc665` is the last code/runtime state.
+Uncommitted (intentional, for paid-tier run):
+
+```text
+config/setup.json:
+  llm.model_name        gemini-2.5-flash-lite -> gemini-2.5-flash
+  debate.player.best_of_N  1 -> 3
+```
 
 Recent important commits (2026-05-26 live-testing session):
 
@@ -54,8 +60,12 @@ Completed:
 Current Gemini model:
 
 ```text
-gemini-2.5-flash-lite
+gemini-2.5-flash   (paid tier, billing enabled 2026-05-28)
 ```
+
+Provider seam (from commit 04540b1): `llm.provider` in `config/setup.json` selects
+between `"google"` (direct google.genai SDK, default) and `"gemini-cli"` (local
+shim). Paid runs use `"google"`.
 
 Current evidence pack:
 
@@ -138,32 +148,92 @@ results/run_001/
 
 These generated JSONL files are ignored by git.
 
-## Gemini Quota Notes (MEASURED 2026-05-26 — this is the real blocker)
+## Gemini Quota (RESOLVED 2026-05-28)
 
-`gemini-2.5-flash-lite` free tier enforces TWO caps simultaneously:
+Billing is enabled on the Google Cloud project behind `GOOGLE_API_KEY`. The previous
+free-tier caps (10 RPM / 20 RPD on `gemini-2.5-flash-lite`) that blocked us on
+2026-05-26 no longer apply. Same `.env` key, paid quota now.
 
-```text
-10 requests / MINUTE  (GenerateRequestsPerMinutePerProjectPerModel-FreeTier)
-20 requests / DAY     (GenerateRequestsPerDayPerProjectPerModel-FreeTier)
+Paid-tier limits on `gemini-2.5-flash` (Tier 1): 1,000 RPM / 10,000 RPD — comfortably
+covers a full Module J 250-400 match sweep.
+
+Existing 429 backoff in `llm_client.py` (commit f1cc665) is still in place as a safety net.
+
+Check usage / spend:
+- Rate limits: https://aistudio.google.com/rate-limit
+- Billing/budget: Google Cloud Console -> Billing -> Budgets & alerts
+
+A $15 budget alert is configured on the GCP project as a guardrail.
+
+## How To Run (paid tier, current config)
+
+Three PowerShell terminals at repo root.
+
+Terminal 1, full LLM referee + LLM players (the real configuration):
+
+```powershell
+uv run referee --config config/setup.json --brain llm --move-timeout 120 --show-transcript
 ```
 
-- The **per-minute** cap is now handled in code: `llm_client.py` parses the server's
-  `retry in Xs` and sleeps that long (commit f1cc665). A `429` burst no longer aborts a match.
-- The **per-day** cap CANNOT be paced around. One full LLM-referee match needs ~40 calls
-  (10 player moves x best_of_N=3 + per-turn referee evals + verdict), so the 20/day cap
-  cannot fund even a single full match. On 2026-05-26 we exhausted two separate keys' daily
-  allowances and never completed a clean 10-turn debate.
+Terminal 2:
 
-Check usage: `https://aistudio.google.com/rate-limit`
+```powershell
+uv run player --config config/setup.json --name PlayerA --brain llm
+```
+
+Terminal 3:
+
+```powershell
+uv run player --config config/setup.json --name PlayerB --brain llm
+```
+
+Cheaper sanity variant: swap Terminal 1 to `--brain simple` (simple referee, real
+LLM players) — ~10 calls/match instead of ~40.
+
+## First Clean End-to-End Match (2026-05-28)
+
+First fully successful LLM-vs-LLM-vs-LLM match completed on the paid tier.
+
+```text
+Match ID: a308b937-33a5-4599-8c24-f2d1b33d90e4
+Motion:   Autonomous AI agents should be allowed to make consequential decisions
+          without human approval
+Result:   CON wins, margin -0.22
+Turns:    10 (5 PRO / 5 CON, opening/rebuttal/closing structure correct)
+Calls:    ~12 Gemini calls; one 503 auto-retried into 200; no quota errors
+```
+
+Artifacts:
+
+```text
+results/a308b937-33a5-4599-8c24-f2d1b33d90e4_trajectory.jsonl   (10 lines, referee trace)
+results/run_001/a308b937-...player_PRO.jsonl                    (5 lines, PRO private capture)
+results/run_001/a308b937-...player_CON.jsonl                    (5 lines, CON private capture)
+```
+
+Verdict rationale is coherent — identifies accountability-as-prerequisite vs.
+accountability-in-parallel as the actual crux. Players cite DOC-IDs from the
+evidence pack. CON's margin is non-degenerate (not a landslide), suggesting
+rubric weighting works.
+
+## Known Minor Bug
+
+`[referee tell]` per-turn text occasionally mislabels which side just spoke
+(observed at turns 07 and 08 of the 2026-05-28 match: PRO turn labeled as
+"CON presented its rebuttal" and vice versa). The `tell` is human-readable
+flavor text; it does NOT feed the verdict path. Worth investigating but not
+blocking. Likely a label-swap somewhere in the referee's turn-summary prompt
+or post-processing.
 
 ## Next Useful Work
 
-1. **Pick a quota path to finish a match** (the only real blocker):
-   - cheapest: `debate.player.best_of_N` -> 1 and use `--brain simple` referee (~10 calls/match);
-   - real fix: enable billing on a Google project (also the only way Module J's 250-400-match
-     sweep can ever run);
-   - or use a model with a higher daily free cap.
-2. Run a clean match on the latest code (`f1cc665`) once quota allows.
-3. Inspect transcript quality and `results/` JSONL.
-4. Use `notebooks/analysis.ipynb` for reporting.
-5. Context for whatever happened: read `docs/devlog/2026-05-26-first-live-llm-match.md`.
+1. Commit the `config/setup.json` change (`gemini-2.5-flash`, `best_of_N=3`)
+   plus the CURRENT_STATE update — this is the new known-good baseline.
+2. Run 2-3 more matches to confirm stability and gather variance data.
+3. Investigate the `[referee tell]` side-label bug (see "Known Minor Bug").
+4. Launch the Module J sweep when ready (250-400 matches). Estimated cost
+   ~$5-15 against the $15 GCP budget alert; consider raising the budget if
+   you plan to run the full sweep more than once.
+5. Use `notebooks/analysis.ipynb` for the writeup.
+6. Historical context for the quota saga (now resolved):
+   `docs/devlog/2026-05-26-first-live-llm-match.md`.
