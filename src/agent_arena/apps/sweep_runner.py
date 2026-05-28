@@ -95,10 +95,14 @@ def run_single_match(
     t1.start()
     t2.start()
 
-    t1.join(timeout=10.0)
-    t2.join(timeout=10.0)
+    # Scale join deadline with the per-move timeout so LLM matches (60s+ per turn)
+    # have room to finish before we tear sockets down. Seeded matches still wrap fast
+    # because the threads exit on their own well before the deadline.
+    match_deadline = max(120.0, cfg.game.move_timeout_seconds * 20.0)
+    t1.join(timeout=match_deadline)
+    t2.join(timeout=match_deadline)
     if server.game_thread:
-        server.game_thread.join(timeout=10.0)
+        server.game_thread.join(timeout=match_deadline)
 
     server.stop()
 
