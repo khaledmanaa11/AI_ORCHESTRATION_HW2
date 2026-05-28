@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import re
 import shutil
 import subprocess
@@ -14,9 +15,9 @@ from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 
-_RETRYABLE_STATUS = (429, 500, 503)
-_MAX_RETRIES = 6
-_MAX_BACKOFF_SECONDS = 65.0
+_RETRYABLE_STATUS = (429, 500, 502, 503, 504)
+_MAX_RETRIES = 10
+_MAX_BACKOFF_SECONDS = 120.0
 _RETRY_DELAY_RE = re.compile(r"retry in (\d+(?:\.\d+)?)s")
 
 # Gemini CLI subprocess timeout (generous — OAuth-backed Code Assist can be slow)
@@ -35,11 +36,18 @@ GeminiError = LLMError
 
 
 def _backoff_seconds(exc: Exception, attempt: int) -> float:
-    """Honor the server's suggested retry-after; else exponential fallback."""
+    """Honor the server's suggested retry-after; else exponential + jitter.
+
+    Jitter (±25%) prevents two players that hit a 503 at the same instant from
+    syncing their retry schedules and re-colliding on every wake-up.
+    """
     match = _RETRY_DELAY_RE.search(str(exc))
     if match:
-        return min(float(match.group(1)) + 1.0, _MAX_BACKOFF_SECONDS)
-    return min(2.0 ** attempt, _MAX_BACKOFF_SECONDS)
+        base = float(match.group(1)) + 1.0
+    else:
+        base = 2.0 ** attempt
+    jitter = base * random.uniform(-0.25, 0.25)
+    return min(max(base + jitter, 1.0), _MAX_BACKOFF_SECONDS)
 
 
 class GoogleGenAIClient:
