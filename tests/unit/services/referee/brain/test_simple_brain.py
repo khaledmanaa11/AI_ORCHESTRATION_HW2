@@ -31,9 +31,9 @@ def _make_ctx(
     return RefereeContext(
         request_kind=kind,
         state={
-            "turn_number": 1,
-            "active_side": "PRO",
-            "phase": "OPENING",
+            "turn_number": 0,
+            "active_side": None,
+            "phase": None,
             "rules_snapshot": {"word_cap": WORD_CAP},
         },
         move={"text": text},
@@ -123,6 +123,23 @@ def test_tell_contains_turn_metadata():
     assert "T1" in decision.tell
     assert "PRO" in decision.tell
     assert "OPENING" in decision.tell
+
+
+def test_tell_side_label_not_swapped():
+    """Reproduces the S2 label-swap bug."""
+    brain = SimpleRefereeBrain()
+    # Simulate state just before Turn 2. The previous turn was 1 (PRO).
+    ctx = _make_ctx(text="Turn 2 text.")
+    ctx.state["turn_number"] = 1
+    ctx.state["active_side"] = "PRO"
+    ctx.state["phase"] = "OPENING"
+    ctx.state["rules_snapshot"]["first_speaker"] = "PRO"
+    decision = brain.decide(ctx)
+    assert decision.tell is not None
+    # If the bug is present, tell will incorrectly label this as PRO (the previous turn's side)
+    # The fix ensures it's correctly labeled as CON (the current turn's side).
+    assert "T2" in decision.tell
+    assert "CON" in decision.tell
 
 
 # ---------------------------------------------------------------------------

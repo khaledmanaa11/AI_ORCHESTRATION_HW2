@@ -28,7 +28,7 @@ class MockLLMRefereeBrain(LLMRefereeBrain):
 def base_context() -> RefereeContext:
     return RefereeContext(
         request_kind=RequestKind.EVALUATE_TURN,
-        state={"motion": "Test motion on global warming", "turn_number": 1, "active_side": "PRO", "phase": "OPENING", "rules_snapshot": {"word_cap": 250}, "transcript": []},
+        state={"motion": "Test motion on global warming", "turn_number": 0, "active_side": None, "phase": None, "rules_snapshot": {"word_cap": 250, "R": 2, "first_speaker": "PRO"}, "transcript": []},
         move={"text": "This is a test utterance citing doc_A."},
         rubric={"criteria": ["logic", "evidence", "rebuttal", "persuasion"], "weights": {"logic": 30, "evidence": 30, "rebuttal": 25, "persuasion": 15}},
         judge_variant="naive", evidence_pack={"doc_A": "Test content."}, score_trajectory=[]
@@ -63,11 +63,11 @@ def test_evaluate_turn_prompt_contents(base_context: RefereeContext) -> None:
     brain = MockLLMRefereeBrain()
     brain.decide(base_context)
     p = brain.calls[-1][0]
-    assert all(x in p.lower() for x in ["test motion on global warming", "logic", "evidence", "rebuttal", "persuasion", "0-10", "250"])
+    assert all(x in p.lower() for x in ["test motion on global warming", "logic", "evidence", "rebuttal", "persuasion", "0-10", "250", "evaluate turn 1", "by side pro"])
 
 def test_rebuttal_opponent_prior(base_context: RefereeContext) -> None:
     brain = MockLLMRefereeBrain()
-    base_context.state["phase"] = "REBUTTAL"
+    base_context.state["turn_number"] = 2  # Current turn will be 3, which is REBUTTAL for R=2
     base_context.state["transcript"] = [{"turn_number": 1, "side": "PRO", "utterance": "Pro opponent initial view."}]
     brain.decide(base_context)
     assert "Pro opponent initial view." in brain.calls[-1][0]

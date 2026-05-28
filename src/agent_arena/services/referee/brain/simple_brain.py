@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from agent_arena.services.game.debate_state import active_side as get_active_side
+from agent_arena.services.game.debate_state import phase as get_phase
 from agent_arena.services.referee.brain.base import (
     RefereeBrain,
     RefereeContext,
@@ -75,10 +77,12 @@ class SimpleRefereeBrain(RefereeBrain):
         state = context.state
 
         # Derive public turn metadata from state
-        t = state.get("turn_number", 0)
-        side = state.get("active_side", "?")
-        cur_phase = state.get("phase", "?")
+        t = state.get("turn_number", 0) + 1
         snap = state.get("rules_snapshot", {})
+        r = snap.get("R", 0)
+        first_speaker = snap.get("first_speaker", "PRO")
+        side = get_active_side(t, first_speaker)
+        cur_phase = get_phase(t, r)
         word_cap: int = int(snap.get("word_cap", 250))
         wc = len(text.split()) if text else 0
 

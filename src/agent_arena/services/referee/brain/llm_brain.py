@@ -13,6 +13,8 @@ from agent_arena.services.referee.brain.base import (
     RequestKind,
     aggregate_verdict,
 )
+from agent_arena.services.game.debate_state import active_side as get_active_side
+from agent_arena.services.game.debate_state import phase as get_phase
 from agent_arena.services.referee.brain.judge_prompts import (
     build_rationale_prompt,
     build_tiebreak_prompt,
@@ -64,9 +66,12 @@ class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
         text: str = move.get("text", "") if isinstance(move, dict) else ""
         state = context.state
 
-        t = state.get("turn_number", 0)
-        side = state.get("active_side", "?")
-        cur_phase = state.get("phase", "?")
+        t = state.get("turn_number", 0) + 1
+        snap = state.get("rules_snapshot", {})
+        r = snap.get("R", 0)
+        first_speaker = snap.get("first_speaker", "PRO")
+        side = get_active_side(t, first_speaker)
+        cur_phase = get_phase(t, r)
         variant = context.judge_variant
 
         prompt = build_turn_prompt(variant, text, side, t, cur_phase, state, context.rubric)
