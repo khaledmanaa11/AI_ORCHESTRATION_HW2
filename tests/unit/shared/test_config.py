@@ -23,7 +23,16 @@ def test_load_setup_config_success(tmp_path: Path) -> None:
             "max_frame_size_bytes": 10485760
         },
         "llm": {
-            "model_name": "claude-opus-4-5"
+            "model_name": "claude-opus-4-5",
+            "gatekeeper": {
+                "rpm": 1000,
+                "rpd": 10000,
+                "max_concurrency": 10,
+                "breaker_threshold": 3,
+                "breaker_window_seconds": 60.0,
+                "breaker_cooldown_seconds": 30.0,
+                "acquire_timeout_seconds": 5.0
+            }
         },
         "debate": {
             "format": {
@@ -78,7 +87,16 @@ def test_load_setup_config_version_mismatch(tmp_path: Path) -> None:
             "max_frame_size_bytes": 10485760
         },
         "llm": {
-            "model_name": "claude-opus-4-5"
+            "model_name": "claude-opus-4-5",
+            "gatekeeper": {
+                "rpm": 1000,
+                "rpd": 10000,
+                "max_concurrency": 10,
+                "breaker_threshold": 3,
+                "breaker_window_seconds": 60.0,
+                "breaker_cooldown_seconds": 30.0,
+                "acquire_timeout_seconds": 5.0
+            }
         },
         "debate": {
             "format": {

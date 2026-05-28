@@ -20,7 +20,7 @@ def _full_config(*, debate_override: dict | None = None) -> dict:
         "network": {"host": "127.0.0.1", "port": 9000},
         "game": {"move_timeout_seconds": 10.0},
         "framing": {"max_frame_size_bytes": 10485760},
-        "llm": {"model_name": "claude-opus-4-5"},
+        "llm": {"model_name": "claude-opus-4-5", "gatekeeper": {"rpm": 1000, "rpd": 10000, "max_concurrency": 10, "breaker_threshold": 3, "breaker_window_seconds": 60.0, "breaker_cooldown_seconds": 30.0, "acquire_timeout_seconds": 5.0}},
         "debate": {
             "format": {"rebuttal_rounds": 3, "word_cap": 250,
                        "first_speaker": "PRO", "retry_cap": 1},
