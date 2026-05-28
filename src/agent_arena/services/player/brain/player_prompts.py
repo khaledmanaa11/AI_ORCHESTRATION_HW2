@@ -91,8 +91,8 @@ def build_player_prompt(context: PlayerContext, config: Any) -> tuple[str, dict[
         schema_str,
         f"You are a debater on side: {context.side}.",
         f"Motion: {motion}",
-        f"Rubric: {json.dumps(context.rubric)}",
-        f"Evidence Pack: {json.dumps(context.evidence_pack)}",
+        f"Rubric: {json.dumps(context.rubric, sort_keys=True)}",
+        f"Evidence Pack: {json.dumps(context.evidence_pack, sort_keys=True)}",
     ]
 
     ablation = context.ablation or {}
