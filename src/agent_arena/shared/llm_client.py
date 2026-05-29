@@ -25,6 +25,14 @@ _MAX_RETRIES = 10
 _MAX_BACKOFF_SECONDS = 120.0
 _RETRY_DELAY_RE = re.compile(r"retry in (\d+(?:\.\d+)?)s")
 
+
+def _get_temperature() -> float:
+    """Read sampling temperature from env at call time (diagnostic studies)."""
+    try:
+        return float(os.environ.get("LLM_TEMPERATURE", "0.0"))
+    except ValueError:
+        return 0.0
+
 # Gemini CLI subprocess timeout (generous — OAuth-backed Code Assist can be slow)
 _CLI_TIMEOUT_SECONDS = 120.0
 # Strip ```json ... ``` or ``` ... ``` fences the CLI sometimes wraps JSON in.
@@ -96,7 +104,7 @@ class GoogleGenAIClient:
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=schema,
-            temperature=0.0,
+            temperature=_get_temperature(),
         )
         result = self._generate(prompt, model_name, config)
         if not result.text:
@@ -108,7 +116,7 @@ class GoogleGenAIClient:
         return schema.model_validate(data)
 
     def generate_text(self, prompt: str, model_name: str) -> str:
-        config = types.GenerateContentConfig(temperature=0.0)
+        config = types.GenerateContentConfig(temperature=_get_temperature())
         result = self._generate(prompt, model_name, config)
         return result.text or ""
 
