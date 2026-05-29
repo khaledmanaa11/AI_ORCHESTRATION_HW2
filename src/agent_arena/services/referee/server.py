@@ -44,6 +44,7 @@ class RefereeServer:
         self.game_thread: threading.Thread | None = None
         self.final_state: DebateState | None = None
         self.exception: Exception | None = None
+        self.match_id: str | None = None
 
     def start(self) -> None:
         self.server.start()
@@ -101,6 +102,7 @@ class RefereeServer:
     def run_game(self) -> None:
         try:
             match_id = str(uuid.uuid4())
+            self.match_id = match_id
             player_ids = list(self.registered_players.keys())
             pack_id = self.config.debate.match.evidence_pack
             evidence_pack = load_evidence_pack(pack_id)

@@ -113,7 +113,7 @@ def run_single_match(
         if isinstance(e, GatekeeperExhaustedError):
             raise e
 
-    return server.final_state, server.exception
+    return server.final_state, server.exception, server.match_id
 
 
 def write_streams(
@@ -123,11 +123,12 @@ def write_streams(
     judge_variant: str,
     pro_master: bool,
     con_master: bool,
+    match_id: str | None = None,
 ) -> None:
     """Process match results and append records to streams A, B, C."""
     if not state or not state.verdict:
         return
-    m_id = state.rules_snapshot.get("match_id", "unknown")
+    m_id = match_id or "unknown"
     verdict = state.verdict
     winner = verdict.get("winner")
     margin = verdict.get("margin")
@@ -235,13 +236,13 @@ def run_sweep(
 
     def worker(variant: str, seed: int, pro_master: bool, con_master: bool) -> None:
         player_brain_choice = "seeded" if offline else "llm"
-        st, exc = run_single_match(
+        st, exc, match_id = run_single_match(
             config, variant, seed, pro_master, con_master, ref_brain,
             results_dir, player_brain_choice, move_timeout_seconds
         )
         if not exc:
             with streams_lock:
-                write_streams(results_dir, st, seed, variant, pro_master, con_master)
+                write_streams(results_dir, st, seed, variant, pro_master, con_master, match_id)
         update_summary(st)
 
     work_items = []
