@@ -23,9 +23,9 @@
       "rpm": 2000,
       "rpd": 10000,
       "max_concurrency": 8,
-      "breaker_threshold": 5,
-      "breaker_window_seconds": 30.0,
-      "breaker_cooldown_seconds": 60.0,
+      "breaker_threshold": 15,
+      "breaker_window_seconds": 60.0,
+      "breaker_cooldown_seconds": 180.0,
       "acquire_timeout_seconds": 180.0
     }
   },

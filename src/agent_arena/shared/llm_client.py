@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 import re
@@ -6,6 +7,8 @@ import shutil
 import subprocess
 import time
 from typing import TypeVar
+
+logger = logging.getLogger(__name__)
 
 from dotenv import load_dotenv
 from google import genai
@@ -79,6 +82,10 @@ class GoogleGenAIClient:
                     if retryable and attempt < _MAX_RETRIES - 1:
                         recorder.record("retryable_error")
                         backoff_exc = e
+                        logger.warning(
+                            "Gemini retryable error (attempt %d/%d, code=%s): %s",
+                            attempt + 1, _MAX_RETRIES, e.code, str(e)[:200],
+                        )
                     else:
                         recorder.record("fatal_error")
                         raise LLMError(f"Failed after {attempt + 1} attempts: {str(e)}") from e
