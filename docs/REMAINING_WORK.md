@@ -7,6 +7,26 @@ Sections are filled in by per-module audit agents and assembled by the orchestra
 
 ---
 
+## ✅ STATUS UPDATE — 2026-05-30 (post-execution)
+
+**Every gap in sections 1–10 below has been RESOLVED.** The execution kit in
+`docs/execution/` drove the fixes across **38 commits** (steps A1→G6). Independently
+re-verified at this checkpoint:
+
+- Full test suite: **299 passed**, coverage **90.69%** (≥85% gate).
+- Gatekeeper integration (Part B) wired into both entry points via `ArenaSDK` and active in
+  the sweep path → the OPEN-breaker forfeit storm that killed `sweep_003` should not recur.
+- Fault-tolerance (Part C) wired into referee **and** player (`ShutdownCoordinator`,
+  `WatchdogThread`, `HeartbeatSender`; `request_shutdown` on GAME_OVER/ERROR/quota/disconnect).
+- Protocol frozen at v1.00 with a guard test; `validate()` enforced; orphan PRDs now have
+  PLAN/TODO siblings; Anthropic→Gemini drift reconciled in docs.
+
+**Only Part H (submission deliverables) remains**, and it is gated on the **`[HUMAN]` H1 sweep**
+(the user runs the live 252-match Gemini run personally). The sections below are kept as the
+historical audit; **`docs/execution/PROGRESS.md` is the live tracker** (currently `NEXT: H1`).
+
+---
+
 ## 1. api_gatekeeper
 
 ### Done

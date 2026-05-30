@@ -76,3 +76,11 @@
   src tests` flags ~28 pre-existing unrelated errors; (2) a targeted `pytest <path>` trips the
   global 85% coverage gate. Both are now documented in `00_START_HERE.md` → "VERIFY — the real
   gate". A1 verified green (full suite 276 passed, 90.09% coverage) and committed.
+
+### Verification checkpoints
+- **2026-05-30 — Parts A–G complete, independently verified (pre-H1 gate).** All 36 steps
+  A1→G6 done across 38 commits. Re-checked by a strong model: full suite **299 passed**,
+  coverage **90.69%**. Spot-confirmed the H1-critical, test-invisible wiring (apps are excluded
+  from coverage): `ArenaSDK.start_referee/start_player` both build + inject `APIGatekeeper` and
+  install `ShutdownCoordinator`; player fault-tolerance (C3) is real; sweep path gates LLM calls
+  via the default-gatekeeper singleton. **Cleared to run H1.**
