@@ -14,7 +14,8 @@
 ---
 
 ## Part A — Runtime safety & small fixes → `PART_A_runtime_fixes.md`
-- [ ] A1 — Enforce `validate()` on inbound REGISTER + add `ErrorCode` enum + send typed error
+- [!] A1 — Enforce `validate()` on inbound REGISTER + add `ErrorCode` enum + send typed error
+  - BLOCKED: Required verification exits nonzero because ruff fails on unrelated files and targeted pytest runs hit the global coverage fail-under.
 - [ ] A2 — Send `ERROR` before closing the 3rd+ connection
 - [ ] A3 — Replace hardcoded `"1.00"` with `PROTOCOL_VERSION` import in player agent
 - [ ] A4 — Narrow `TcpClient.connect` except clause (stop masking non-retryable errors)
