@@ -1,0 +1,24 @@
+{
+  "evidence_pack_sha256": "bade145192db59683fd7d7b98cf476254cba96b219539184d5d801f36ad170a4",
+  "motion_id": "Autonomous AI agents should be allowed to make consequential decisions without human approval",
+  "k": 10,
+  "started_at": "2026-05-30T21:46:11.977933+00:00",
+  "total_matches": 120,
+  "completed": 96,
+  "forfeited": 24,
+  "quota_aborted": 0,
+  "pro_wins": 34,
+  "con_wins": 86,
+  "mean_margin": -0.4690991666666666,
+  "mean_turns": 8.000000000000002,
+  "gatekeeper_final_snapshot": {
+    "rpm_tokens": 1999.0,
+    "rpd_remaining": 7730,
+    "rpd_resets_at": "2026-05-31T00:00:00+00:00",
+    "in_flight": 0,
+    "max_concurrency": 12,
+    "breaker_state": "CLOSED",
+    "consecutive_failures": 0,
+    "breaker_opened_at": null
+  }
+}
