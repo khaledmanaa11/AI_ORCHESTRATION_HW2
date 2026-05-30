@@ -8,6 +8,13 @@ what happened in the earlier `sweep_003` run — 242 of 250 matches forfeited). 
 ---
 
 ## H1 — Run the canonical ≥250-match sweep into `results/sweep_001/`
+
+> 🚫 **[HUMAN] — DO NOT AUTOMATE.** If you are an automated worker and `NEXT:` is `H1`: **STOP
+> now.** Do not run any command in this step, do not change `NEXT:`, do not commit. Reply that H1
+> is the user's to run and supervise, and end the session. This run makes hundreds of paid Gemini
+> calls over a long period and must be watched by a human. The user runs it manually; when it's
+> done the **user** sets H1 to `[x]` and `NEXT:` to `H2`, and agent sessions resume at H2.
+
 **Goal:** Produce the real experiment dataset the submission analyzes, in the directory the PRD
 names (`results/sweep_001/`), with most matches actually completing (not forfeited).
 
@@ -50,6 +57,10 @@ mark this step BLOCKED. Do not launch the 252-match run until the smoke run most
 **Commit:** `data(sweep): canonical >=250-match sweep in results/sweep_001`
 > Note: this commits experiment outputs. That matches this repo's "commit everything" rule. If the
 > files are very large, confirm they aren't `.gitignore`d before assuming the commit captured them.
+
+**When you (the human) have finished H1:** in `PROGRESS.md` set `- [x] H1 ...` and change the
+`NEXT:` line to `H2`, commit + push that PROGRESS update, then resume agent sessions — the next
+worker will pick up at **H2** (rebuild the notebook on the real `sweep_001` data you just produced).
 
 ---
 

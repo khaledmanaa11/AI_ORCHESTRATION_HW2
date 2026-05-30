@@ -21,6 +21,12 @@ PowerShell**.
    only step ID you may work on this session (e.g. `A3`).
 2. Open the **part file** named in PROGRESS for that ID (e.g. `PART_A_runtime_fixes.md`).
    Find the step with that exact ID.
+2a. **STOP-IF-HUMAN.** If the step is tagged **`[HUMAN]`** (in `PROGRESS.md` and/or at the top of
+   the step), it is the user's to run — it costs real money and/or needs live supervision. You must
+   **not** implement it, **not** run any of its commands, **not** change `NEXT:`, and **not**
+   commit. Reply exactly: *"Step `<ID>` is tagged [HUMAN] — it's yours to run and supervise. I'm
+   stopping here."* Then **STOP**. (The user runs it themselves, then sets it `[x]` and advances
+   `NEXT:` by hand before the next session.)
 3. **Read every file listed under "Read first"** in that step — actually open and read them.
    The line numbers are hints; the file may have shifted. Trust the file, not the hint.
 4. **Implement ONLY that step.** Touch only the files listed under "Files (scope)". Do not
@@ -43,6 +49,8 @@ PowerShell**.
 ---
 
 ## Hard rules (never break these)
+- **Never run a `[HUMAN]`-tagged step.** Stop and hand it back (see 2a). Today that is **H1** (the
+  252-match live Gemini sweep) — the user runs and supervises it personally.
 - **One step per session.** Never chain steps.
 - **Never commit if Verify failed** (except the BLOCKED note in 8a).
 - **Never edit files outside the step's "Files (scope)" list.**

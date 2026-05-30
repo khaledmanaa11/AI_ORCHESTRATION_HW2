@@ -7,6 +7,9 @@
 > Part files hold the detail. Do steps in this exact order.
 > **Do not start Part H until every step in Parts B and C is `[x]`** (the canonical sweep
 > needs a healthy gatekeeper and wired fault-tolerance, or it dies on an OPEN breaker).
+> **Step H1 is `[HUMAN]`** — the user runs the live 252-match Gemini sweep personally. When an
+> agent's `NEXT:` reaches H1, it must STOP and hand off. After the user finishes H1, the user
+> sets H1 to `[x]` and `NEXT:` to `H2`, then agent sessions resume from H2.
 
 ---
 
@@ -58,7 +61,7 @@
 - [ ] G6 — Fix stale statuses in `docs/TODO.md`
 
 ## Part H — Submission deliverables (LAST — needs B & C done) → `PART_H_submission.md`
-- [ ] H1 — Run canonical ≥250-match sweep into `results/sweep_001/`
+- [ ] H1 — **[HUMAN]** Run canonical ≥250-match sweep into `results/sweep_001/` — _the user runs & supervises this; agents must STOP here, not run it_
 - [ ] H2 — Rewrite `notebooks/analysis.ipynb` (parameterized, real values) + export `.html`
 - [ ] H3 — Add ≥2 more entries to `docs/PROMPTS.md` (≥3 total)
 - [ ] H4 — README: Troubleshooting + `llm.gatekeeper` config + Examples/screenshots
