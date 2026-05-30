@@ -25,9 +25,11 @@ from agent_arena.services.referee.brain.base import (
 )
 from agent_arena.services.referee.brain.simple_brain import simple_tiebreak
 from agent_arena.services.referee.result import write_trajectory
+from agent_arena.shared.api_gatekeeper import GatekeeperError
 from agent_arena.shared.transport.channel import Channel
 
 logger = logging.getLogger(__name__)
+TERMINATED_QUOTA_ABORTED = "quota_aborted"
 
 
 def _enc(match_id: str, t: MessageType, payload: dict[str, Any], seq: int) -> bytes:
@@ -89,6 +91,10 @@ class DebateGameLoop:
         except DisconnectError:
             terminated = TERMINATED_DISCONNECT
             state = self._forced_verdict(state, terminated)
+        except GatekeeperError:
+            logger.exception("Gatekeeper aborted match=%s", self.match_id)
+            terminated = TERMINATED_QUOTA_ABORTED
+            state = self._forced_verdict(state, terminated)
         except Exception:
             logger.exception("Unexpected abort in match=%s", self.match_id)
             terminated = TERMINATED_ABORTED
@@ -106,8 +112,9 @@ class DebateGameLoop:
                 self._send, self._bcast,
             )
         d = self.brain.decide(self._ctx(RequestKind.RENDER_VERDICT, state, None))
+        verdict = self._with_api_state(d.verdict or {})
         return DebateState(state.motion, state.turn_number, state.transcript,
-                           "COMPLETE", d.verdict or {}, state.rules_snapshot)
+                           "COMPLETE", verdict, state.rules_snapshot)
 
     def _forced_verdict(self, state: DebateState, reason: str) -> DebateState:
         """Compute verdict on partial transcript; never raises (FR-SB6, 8.3/8.6)."""
@@ -118,8 +125,18 @@ class DebateGameLoop:
             verdict = aggregate_verdict(
                 self._traj, self.rubric.get("weights", {}), simple_tiebreak)
         verdict["terminated_reason"] = reason
+        verdict = self._with_api_state(verdict)
         return DebateState(state.motion, state.turn_number, state.transcript,
                            "COMPLETE", verdict, state.rules_snapshot)
+
+    def _with_api_state(self, verdict: dict[str, Any]) -> dict[str, Any]:
+        gatekeeper = getattr(self.brain, "api_gatekeeper", None)
+        if gatekeeper is None:
+            client = getattr(self.brain, "_client", None)
+            gatekeeper = getattr(client, "_gatekeeper", None)
+        if gatekeeper is not None:
+            verdict["api_state"] = gatekeeper.snapshot()
+        return verdict
 
     def _finish(self, state: DebateState, _terminated: str | None) -> None:
         """Broadcast GAME_OVER + dump trajectory — always called from finally."""

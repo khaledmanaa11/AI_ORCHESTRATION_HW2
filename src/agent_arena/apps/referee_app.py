@@ -10,7 +10,9 @@ from agent_arena.apps.run_helpers import (
     wait_for_match,
 )
 from agent_arena.services.referee.server import RefereeServer
+from agent_arena.shared.api_gatekeeper import APIGatekeeper
 from agent_arena.shared.config import load_setup_config
+from agent_arena.shared.llm_client import LLMClient
 
 
 def parse_args() -> argparse.Namespace:
@@ -32,7 +34,11 @@ def main() -> None:
     config = load_setup_config(args.config)
     if args.move_timeout is not None:
         config.game.move_timeout_seconds = args.move_timeout
+    gatekeeper = APIGatekeeper(**config.llm.gatekeeper.model_dump())
     brain = build_referee_brain(config, args.brain)
+    brain.api_gatekeeper = gatekeeper
+    if args.brain == "llm":
+        brain._client = LLMClient(provider=config.llm.provider, gatekeeper=gatekeeper)
     server = RefereeServer(config, brain=brain)
 
     try:

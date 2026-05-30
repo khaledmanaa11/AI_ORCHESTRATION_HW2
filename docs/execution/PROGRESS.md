@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: B1**
+**NEXT: B2**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -22,7 +22,7 @@
 - [x] A6 — Delete duplicate `TERMINATED_*` constants in `result.py`, import from `constants`
 
 ## Part B — API Gatekeeper integration → `PART_B_gatekeeper.md`
-- [ ] B1 — Wire `APIGatekeeper` into referee_app; write `api_state` into verdict
+- [x] B1 — Wire `APIGatekeeper` into referee_app; write `api_state` into verdict
 - [ ] B2 — Add `quota_aborted` handling branch in `_turn_runner`
 - [ ] B3 — Wire `APIGatekeeper` into player_app + agent; abort move on `GatekeeperError`
 - [ ] B4 — `print_transcript`: gatekeeper section + `quota_aborted` banner
