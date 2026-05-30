@@ -15,12 +15,12 @@
 - [x] **T0.1** Write `docs/PRD.md`. — *DoD:* document authored; approved before development starts.
 - [x] **T0.2** Write `docs/PLAN.md`. — *DoD:* architecture + skeleton agreed.
 - [x] **T0.3** Write `docs/TODO.md`. — *DoD:* this file.
-- [ ] **T0.4** Write per-mechanism PRDs: `PRD_protocol.md`, `PRD_matchmaking.md`,
+- [x] **T0.4** Write per-mechanism PRDs: `PRD_protocol.md`, `PRD_matchmaking.md`,
       `PRD_game_engine.md`, `PRD_referee_brain.md`. — *DoD:* each covers purpose, I/O,
       constraints, alternatives, and edge-case test scenarios.
-- [ ] **T0.5** Create `docs/PROMPTS.md` (prompt-engineering log, §8.3). — *DoD:* file exists;
+- [x] **T0.5** Create `docs/PROMPTS.md` (prompt-engineering log, §8.3). — *DoD:* file exists;
       header and first entry added; updated after every significant LLM interaction.
-- [ ] **T0.6** Initialize repo skeleton: `pyproject.toml` (deps, ruff config, coverage config
+- [x] **T0.6** Initialize repo skeleton: `pyproject.toml` (deps, ruff config, coverage config
       with `apps/` omit, console scripts `referee`/`player`), `uv.lock` via `uv sync`,
       `.gitignore` (must include `.env`, `*.key`, `*.pem`, `credentials.json`,
       `__pycache__`, `.venv`, `results/*.log`), `.env-example`, `README.md` (stub),
@@ -74,16 +74,16 @@
 ## Phase 4 — Referee (Milestone M4)
 - [x] **T4.1** `services/game/engine_base.py` — `GameEngine` abstract interface
       (PLAN §5.7). — *DoD:* interface documented; mockable. ✅ commit 557cfe5
-- [ ] **T4.2** `services/game/trivial_game.py` — placeholder `GameEngine`. — *DoD:*
+- [x] **T4.2** `services/game/trivial_game.py` — placeholder `GameEngine`. — *DoD:*
       produces a terminal state within ≤ 10 turns; exercised by integration tests.
-      **NOTE:** skipped — `DebateEngine` serves as the concrete engine directly.
+      **NOTE:** Replaced by `DebateEngine` directly.
 - [x] **T4.3** `services/game/debate_state.py` — debate game state model; immutable
       frozen dataclasses (`TurnRecord`, `DebateMove`, `DebateState`). — *DoD:* tested;
       round-trips + public-only invariant pass. ✅ commit a4b4aaf
-- [ ] **T4.4** `services/referee/matchmaking.py` — accept exactly `player_count` players;
+- [x] **T4.4** `services/referee/matchmaking.py` — accept exactly `player_count` players;
       reject 3rd; handle `lobby_timeout`; assign unique roles; send `REGISTER_ACK` (with
       `match_id`) then `ROLE_ASSIGN` as separate messages. — *DoD:* AC1, AC2; lobby
-      timeout tested. ⏳ **Module F — next to implement**
+      timeout tested.
 - [x] **T4.5** `services/referee/game_loop.py` + `_turn_runner.py` — turn orchestration;
       two-tier move validation; retry gate; timeout/disconnect fault policy; broadcasts
       `STATE_UPDATE`. — *DoD:* all fault paths tested. ✅ commit bc00e69
@@ -94,48 +94,47 @@
       ✅ commit 4703095
 - [x] **T4.8** `services/referee/brain/simple_brain.py` — deterministic word-count brain;
       concession scan; no external calls. — *DoD:* tested; deterministic. ✅ commit 12f5004
-- [ ] **T4.9** `services/referee/server.py` — wires together matchmaking, game loop,
+- [x] **T4.9** `services/referee/server.py` — wires together matchmaking, game loop,
       result, and teardown. — *DoD:* runs full loop against stub brains and channels.
-      ⏳ **Module H (integration gate)**
 
 ## Phase 5 — Player (Milestone M5)
-- [ ] **T5.1** `services/player/brain/base.py` — `PlayerBrain` abstract interface
+- [x] **T5.1** `services/player/brain/base.py` — `PlayerBrain` abstract interface
       (state + legal-move hints in, move out). — *DoD:* interface documented; mockable.
-- [ ] **T5.2** `services/player/brain/random_brain.py` — returns a random legal move. —
-      *DoD:* tested; never returns an illegal move.
-- [ ] **T5.3** `services/player/agent.py` — message-handling loop; routes all lifecycle
+- [x] **T5.2** `services/player/brain/random_brain.py` — returns a random legal move. —
+      *DoD:* tested; never returns an illegal move. **NOTE:** Replaced by `SeededPlayerBrain`/`LLMPlayerBrain` directly.
+- [x] **T5.3** `services/player/agent.py` — message-handling loop; routes all lifecycle
       messages correctly. — *DoD:* tested with mock channel + mock brain.
-- [ ] **T5.4** `services/player/client.py` — connection lifecycle; completes handshake;
+- [x] **T5.4** `services/player/client.py` — connection lifecycle; completes handshake;
       delegates to `agent`. — *DoD:* tested with mock server.
 
 ## Phase 6 — SDK, Entry Points & Integration (Milestone M6)
-- [ ] **T6.1** `sdk/sdk.py` — `ArenaSDK` with `start_referee(config)` and
+- [x] **T6.1** `sdk/sdk.py` — `ArenaSDK` with `start_referee(config)` and
       `start_player(config)`. — *DoD:* all logic reachable via SDK; entry points contain
       no logic.
-- [ ] **T6.2** `apps/referee_app.py` and `apps/player_app.py` — thin console scripts;
+- [x] **T6.2** `apps/referee_app.py` and `apps/player_app.py` — thin console scripts;
       parse CLI args; call `ArenaSDK`. — *DoD:* `uv run referee` and `uv run player`
       launch correctly.
-- [ ] **T6.3** Integration test: real referee + 2 players over localhost, trivial game runs
+- [x] **T6.3** Integration test: real referee + 2 players over localhost, trivial game runs
       to `GAME_OVER`. — *DoD:* AC3 reproducible; passes in CI.
 
 ## Phase 7 — Pro Phase: LLM Brains (Milestone M7)
-- [ ] **T7.1** `shared/llm_caller.py` — `LLMCallerMixin`; wraps Anthropic SDK call;
-      reads `ANTHROPIC_API_KEY` from env; model name from config. — *DoD:* SDK import in
+- [x] **T7.1** `shared/llm_caller.py` — `LLMCallerMixin`; wraps Google Gemini API call;
+      reads `GOOGLE_API_KEY` from env; model name from config. — *DoD:* SDK import in
       one place only; mocked in tests (no real API calls in unit tests).
-- [ ] **T7.2** `services/referee/brain/llm_brain.py` — `LLMRefereeBrain(LLMCallerMixin,
+- [x] **T7.2** `services/referee/brain/llm_brain.py` — `LLMRefereeBrain(LLMCallerMixin,
       RefereeBrain)`; builds referee-specific prompts; calls `LLMCallerMixin`. — *DoD:*
       AC9 (no transport change); tested with mocked `LLMCallerMixin`.
-- [ ] **T7.3** `services/player/brain/llm_brain.py` — `LLMPlayerBrain(LLMCallerMixin,
+- [x] **T7.3** `services/player/brain/llm_brain.py` — `LLMPlayerBrain(LLMCallerMixin,
       PlayerBrain)`; builds player-specific prompts. — *DoD:* same as T7.2.
-- [ ] **T7.4** End-to-end LLM test: all three agents run with LLM brains; full match
+- [x] **T7.4** End-to-end LLM test: all three agents run with LLM brains; full match
       completes; no transport-layer changes from Phase 6. — *DoD:* AC9 confirmed.
 
 ## Cross-cutting (every phase)
-- [ ] **TC.1** TDD: write tests before/with each module; maintain global coverage ≥ 85 %. —
+- [x] **TC.1** TDD: write tests before/with each module; maintain global coverage ≥ 85 %. —
       *DoD:* `uv run pytest --cov` reports ≥ 85 % (AC5).
-- [ ] **TC.2** `ruff check` clean at every commit. — *DoD:* 0 violations (AC6).
-- [ ] **TC.3** Every file ≤ 150 code lines; split when approaching limit. — *DoD:* AC7.
-- [ ] **TC.4** No hardcoded host/port/timeout/key in source. — *DoD:* AC8.
+- [x] **TC.2** `ruff check` clean at every commit. — *DoD:* 0 violations (AC6).
+- [x] **TC.3** Every file ≤ 150 code lines; split when approaching limit. — *DoD:* AC7.
+- [x] **TC.4** No hardcoded host/port/timeout/key in source. — *DoD:* AC8.
 - [ ] **TC.5** Maintain `README.md` with all mandatory sections (guidelines §2.1):
       installation instructions (step-by-step, env setup), usage instructions (all run
       modes, flags, typical workflow), examples & screenshots, configuration guide
@@ -155,6 +154,6 @@
 ## Open questions to resolve before Phase 4
 - Exact role set and turn order for the placeholder game (drives `matchmaking` + `state`).
 - Move-timeout policy: forfeit vs. skip-turn vs. retry — pick one per config.
-- Anthropic model name for Phase 2 LLM brains (add to `setup.json`).
+- Gemini model name for Phase 2 LLM brains (add to `setup.json`).
 - Referee brain decision types: what rulings/actions does the referee brain need to make
   (drives `RefereeContext` and `RefereeDecision` schema in T4.7)?

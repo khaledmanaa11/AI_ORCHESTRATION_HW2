@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: G6**
+**NEXT: H1**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -58,7 +58,7 @@
 - [x] G3 — Write `PLAN_protocol.md` + `TODO_protocol.md`
 - [x] G4 — Write `PLAN_matchmaking.md` + `TODO_matchmaking.md`; fix PRD roles to PRO/CON
 - [x] G5 — Write `PLAN_game_engine.md` + `TODO_game_engine.md`; reconcile PRD signatures
-- [ ] G6 — Fix stale statuses in `docs/TODO.md`
+- [x] G6 — Fix stale statuses in `docs/TODO.md`
 
 ## Part H — Submission deliverables (LAST — needs B & C done) → `PART_H_submission.md`
 - [ ] H1 — **[HUMAN]** Run canonical ≥250-match sweep into `results/sweep_001/` — _the user runs & supervises this; agents must STOP here, not run it_
