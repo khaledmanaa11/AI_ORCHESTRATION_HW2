@@ -31,7 +31,9 @@ PowerShell**.
    The line numbers are hints; the file may have shifted. Trust the file, not the hint.
 4. **Implement ONLY that step.** Touch only the files listed under "Files (scope)". Do not
    fix anything else, do not start the next step, do not refactor unrelated code.
-5. Run **every command** under "Verify". They must all pass / show the expected result.
+5. **Verify your work** using the two-command gate in **"VERIFY — the real gate"** below. The
+   step's own "Verify" list tells you which tests are most relevant, but that gate is what decides
+   pass/fail. Do not be fooled by the two known traps described there.
 6. **If Verify passes** → go to step 7. **If Verify fails after 2 honest attempts** → go to
    step 8 (BLOCKED).
 7. **PASS path:**
@@ -73,16 +75,48 @@ uv run pytest -q
 # run one test file (faster while iterating)
 uv run pytest tests/unit/shared/test_api_gatekeeper.py -q
 
-# lint (must be clean before commit)
-uv run ruff check src tests
+# lint ONLY the files you changed (see the VERIFY trap about `src tests` below)
+uv run ruff check <files-you-changed>
 
-# auto-fix trivial lint, then re-check
-uv run ruff check src tests --fix
+# auto-fix trivial lint in your files, then re-check
+uv run ruff check <files-you-changed> --fix
 
 # launch the apps (only when a step asks you to)
 uv run referee
 uv run player
 ```
+
+## VERIFY — the real gate (read before you decide pass/fail or BLOCK)
+
+This repo has two quirks that make naive verify commands fail for reasons that have **nothing to
+do with your change**. Do not block on either of them. Your work is verified when **both** of
+these are true:
+
+**(1) The full test suite is green, including coverage:**
+```powershell
+uv run pytest -q
+```
+This is THE gate. It must end with `... passed` and `Required test coverage of 85.0% reached`.
+> ⚠️ **Coverage trap:** the repo sets a *global* `--cov=agent_arena ... fail_under=85` in
+> `pyproject.toml`. So a **targeted** run like `uv run pytest tests/unit/services/protocol -q`
+> reports ~15% coverage and **FAILS** — even when all its tests pass. That failure is an artifact,
+> not your bug. When you want a fast targeted run while iterating, add **`--no-cov`**:
+> `uv run pytest tests/unit/services/protocol --no-cov -q`. The authoritative check is always the
+> full `uv run pytest -q` above.
+
+**(2) Ruff is clean on the files YOU changed:**
+```powershell
+uv run ruff check <only the files this step created or edited>
+```
+> ⚠️ **Ruff-debt trap:** `uv run ruff check src tests` currently reports ~28 PRE-EXISTING errors in
+> unrelated files (e.g. `tests/unit/shared/test_llm_client.py`). That is not your job to fix and
+> NOT a reason to block. Only your changed files must be clean. Use `--fix` for trivial issues in
+> your own files.
+
+**So: never BLOCK because `ruff check src tests` is noisy or because a targeted `pytest <path>`
+trips the coverage gate.** Only BLOCK if the full `uv run pytest -q` fails for a reason you can't
+resolve, or you genuinely cannot implement the step. (Where a step's "Verify" still literally says
+`uv run ruff check src tests`, treat it as "ruff-clean on my changed files" per the rule above.)
 
 ## Commit & push (copy exactly, fill the message)
 PowerShell — run these three in order; if `commit` fails, do **not** push:

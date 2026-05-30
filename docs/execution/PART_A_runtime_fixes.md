@@ -25,7 +25,7 @@ typed `ERROR`, instead of silently accepting it.
 3. Replace the existing bare `"MALFORMED_MESSAGE"` string (if present) with `ErrorCode.MALFORMED_MESSAGE`.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/services/protocol -q
 uv run pytest tests/unit/services/referee -q
 ```
@@ -51,7 +51,7 @@ closing, instead of a silent socket close.
 2. Then close as before.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/shared/transport/test_tcp_server.py -q
 ```
 Add/extend a test asserting a 3rd connection receives a frame before EOF.
@@ -70,7 +70,7 @@ Add/extend a test asserting a 3rd connection receives a frame before EOF.
 `"1.00"` with `PROTOCOL_VERSION` where the envelope's `protocol_version` is set.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/services/player -q
 ```
 **Commit:** `refactor(player): use PROTOCOL_VERSION constant instead of literal`
@@ -87,7 +87,7 @@ Anything else should propagate as `ConnectionFailedError` (or the existing failu
 consuming retry attempts.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/shared/transport/test_tcp_client.py -q
 ```
 Add a test: a non-retryable error (e.g. `gaierror`/generic `OSError`) is NOT retried.
@@ -112,7 +112,7 @@ player path; read them from config.
 4. Add the two new keys under the network block in `config/setup.json`.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/shared/test_config.py tests/unit/services/player -q
 ```
 **Commit:** `fix(config): drive retry/backoff/frame-size from config, not literals`
@@ -130,7 +130,7 @@ uv run pytest tests/unit/shared/test_config.py tests/unit/services/player -q
 from `agent_arena.constants`. Update any importers that pulled them from `result`.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest -q
 ```
 **Commit:** `refactor(referee): single source for TERMINATED_* constants`

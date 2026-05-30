@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: A1**
+**NEXT: A2**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -14,8 +14,7 @@
 ---
 
 ## Part A — Runtime safety & small fixes → `PART_A_runtime_fixes.md`
-- [!] A1 — Enforce `validate()` on inbound REGISTER + add `ErrorCode` enum + send typed error
-  - BLOCKED: Required verification exits nonzero because ruff fails on unrelated files and targeted pytest runs hit the global coverage fail-under.
+- [x] A1 — Enforce `validate()` on inbound REGISTER + add `ErrorCode` enum + send typed error
 - [ ] A2 — Send `ERROR` before closing the 3rd+ connection
 - [ ] A3 — Replace hardcoded `"1.00"` with `PROTOCOL_VERSION` import in player agent
 - [ ] A4 — Narrow `TcpClient.connect` except clause (stop masking non-retryable errors)
@@ -72,4 +71,8 @@
 ---
 
 ### Blocked steps (fill in as they happen)
-_(none yet)_
+- A1 (resolved 2026-05-30): the block was a **false alarm caused by the kit's verify commands**,
+  not the code. The worker's A1 implementation was correct. Two kit bugs fixed: (1) `ruff check
+  src tests` flags ~28 pre-existing unrelated errors; (2) a targeted `pytest <path>` trips the
+  global 85% coverage gate. Both are now documented in `00_START_HERE.md` → "VERIFY — the real
+  gate". A1 verified green (full suite 276 passed, 90.09% coverage) and committed.

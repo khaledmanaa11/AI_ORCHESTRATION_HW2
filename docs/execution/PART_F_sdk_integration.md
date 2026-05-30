@@ -19,7 +19,7 @@ that construct and run the referee server / player client exactly as the apps cu
 behavior, just the existing wiring moved behind two methods.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest -q
 ```
 Add a unit test that `ArenaSDK` exposes `start_referee` and `start_player` (callable, right signature).
@@ -36,7 +36,7 @@ Add a unit test that `ArenaSDK` exposes `start_referee` and `start_player` (call
 `uv run player` must still work.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest -q
 uv run referee --help   # or launch briefly; must not error on startup
 ```
@@ -56,7 +56,7 @@ brain). Have both `LLMRefereeBrain` and `LLMPlayerBrain` import and inherit it. 
 copy. Export from `shared/__init__.py`.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/services -q
 uv run pytest -q
 ```
@@ -79,7 +79,7 @@ brains; assert a verdict with a winner/terminated_reason is produced. If it alre
 the step done with a note pointing to the test.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration -q
 ```
 **Commit:** `test(integration): real-TCP referee + 2 players to GAME_OVER`
@@ -99,7 +99,7 @@ and make sure a timeout surfaces as a handled event (forfeit / terminated_reason
 unhandled exception. Coordinate with the watchdog from Part C — don't double-kill.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_debate_faults.py -q
 uv run pytest -q
 ```

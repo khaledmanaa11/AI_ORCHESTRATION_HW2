@@ -26,7 +26,7 @@ connected player with a `WatchdogThread`, and sends `HEARTBEAT`s via `HeartbeatS
 4. Register a shutdown callback that closes sockets and finalizes the verdict.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_debate_faults.py -q
 uv run pytest -q
 ```
@@ -45,7 +45,7 @@ live-but-slow player isn't killed and a truly dead one is.
 `watchdog.heartbeat(player_id)`. Thread the watchdog handle in from C1.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_debate_faults.py tests/unit/services/referee -q
 ```
 **Commit:** `feat(referee): reset player watchdog on every received frame`
@@ -69,7 +69,7 @@ sends heartbeats, and converts `GAME_OVER`/`ERROR` into `coordinator.request_shu
    any flag the loop still needs, but the coordinator drives the exit). Do the same on `ERROR`.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_player_integration.py tests/unit/services/player -q
 ```
 **Commit:** `feat(player): wire shutdown/watchdog/heartbeat and drive exit via coordinator`
@@ -84,7 +84,7 @@ uv run pytest tests/integration/test_player_integration.py tests/unit/services/p
 referee+player are now wired. If coverage on `shared/` is below 85%, mark this step BLOCKED.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest -q
 uv run pytest tests/unit/shared --cov=agent_arena --cov-report=term-missing -q
 ```

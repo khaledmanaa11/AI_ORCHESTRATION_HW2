@@ -21,7 +21,7 @@ Gemini call, so generation is deterministic/configurable instead of env-only.
    env var as the fallback default only when the kwarg is `None`.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/services/player/brain/test_llm_brain.py tests/unit/shared/test_llm_client.py -q
 ```
 Add/extend a test asserting the params from `gen_params` are forwarded into the client call
@@ -43,7 +43,7 @@ inspection) and asserts none of them reference `google.generativeai` or `google.
 scope, and that they obtain LLM access only via `LLMClient`.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/services/player/brain/test_no_direct_sdk.py -q
 ```
 **Commit:** `test(player): guard against direct Gemini SDK imports in brain modules`

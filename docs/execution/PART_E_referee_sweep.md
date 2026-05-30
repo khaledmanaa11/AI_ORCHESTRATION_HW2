@@ -17,7 +17,7 @@ opposite value before running. Make sure the flip is recorded in the match metad
 analysis can see it.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_sweep.py -q
 ```
 Add/extend an assertion that the two matches in a pair have opposite `first_speaker`.
@@ -37,7 +37,7 @@ and append them to `stream_b_private_capture.jsonl`, keyed by `(match_id, seed, 
 they join cleanly to Stream A. Do not delete the per-player files.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_sweep.py -q
 ```
 Assert a `stream_b_private_capture.jsonl` is produced and its rows carry the join keys.
@@ -56,7 +56,7 @@ FR-EX3 / RJ2.3 requires (TODO marks it done but it's absent).
 that single vector turned off (all others on), recording which vector was ablated in Stream C.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_sweep.py -q
 ```
 **Commit:** `feat(sweep): add per-vector one-at-a-time ablation mode`
@@ -75,7 +75,7 @@ and verifies the claim references that entry's actual content (e.g. the cited id
 pack AND the quoted/paraphrased span maps to that entry). Keep it deterministic and offline.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/services/referee/brain/test_llm_brain.py -q
 ```
 Add a test: a citation to a non-existent / unsupported doc-id fails grounding; a real one passes.
@@ -95,7 +95,7 @@ homework requires the wire protocol stay frozen (RK.5 / AC9).
 A git-diff-based CI check is nice-to-have but a value-based test is enough and runs anywhere.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/services/protocol/test_protocol_frozen.py -q
 ```
 **Commit:** `test(protocol): freeze PROTOCOL_VERSION and message-type set`

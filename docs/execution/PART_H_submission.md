@@ -132,12 +132,17 @@ renderer and export). Link the PNG from README and PLAN §1.
 ## H6 — Final submission gate
 **Goal:** Prove the whole thing is green and take the submission snapshot.
 **Read first:** `docs/CURRENT_STATE.md` (currently experiment-narrative form); `docs/devlog/` format.
-**Files (scope):** new `docs/devlog/<today>-submission-gate.md`, rewrite `docs/CURRENT_STATE.md`.
+**Files (scope):** the pre-existing ruff-debt files (whatever `ruff check src tests` flags), new `docs/devlog/<today>-submission-gate.md`, rewrite `docs/CURRENT_STATE.md`.
 **Do:**
-1. Run the full gate (commands below). Everything must pass and coverage stay ≥85%.
-2. Write `docs/devlog/<today>-submission-gate.md` pasting the pytest + ruff output and the current
+1. **Clear the repo-wide ruff debt.** Unlike every other step, this final gate requires the WHOLE
+   repo to be lint-clean. Run `uv run ruff check src tests` — it currently reports ~28 pre-existing
+   errors (mostly `--fix`-able; the rest are trivial unused-arg renames like `*args`→`*_args` or a
+   targeted `# noqa`). Fix them all until `ruff check src tests` is clean. Do NOT change test
+   behavior — only silence lint.
+2. Run the full gate (commands below). Everything must pass and coverage stay ≥85%.
+3. Write `docs/devlog/<today>-submission-gate.md` pasting the pytest + ruff output and the current
    commit hash.
-3. Rewrite `docs/CURRENT_STATE.md` as a one-screen **submission snapshot**: one line
+4. Rewrite `docs/CURRENT_STATE.md` as a one-screen **submission snapshot**: one line
    `Submission-ready snapshot taken at <commit> on <date>`, then a short bullet list of what ships
    (modules done, dataset = sweep_001, notebook = analysis.html, known limitations).
 **Verify:**
@@ -145,7 +150,7 @@ renderer and export). Link the PNG from README and PLAN §1.
 uv run pytest -q
 uv run ruff check src tests
 ```
-Both clean; the two docs reflect reality.
+Both clean (this time `src tests` really must be clean — you just fixed the debt); docs reflect reality.
 **Commit:** `chore(submission): final gate green + submission snapshot`
 
 ---

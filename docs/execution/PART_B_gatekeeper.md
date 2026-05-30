@@ -27,7 +27,7 @@ catches `GatekeeperError`, and records `api_state` in the match verdict.
    tagged `terminated_reason="quota_aborted"` plus `api_state` — do not crash the process.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_debate_loop.py -q
 ```
 Manually confirm a produced verdict (or a new small test) contains an `api_state` key.
@@ -47,7 +47,7 @@ quota), the referee ends the match cleanly instead of treating it as a normal/re
 finalize with `terminated_reason="quota_aborted"` (mirror how disconnect termination is handled).
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_debate_faults.py tests/unit/services/referee -q
 ```
 Add a test that feeds a `quota_aborted` move and asserts the match terminates with that reason.
@@ -72,7 +72,7 @@ of crashing.
    sends `MOVE_SUBMIT(..., flag="quota_aborted")` then stops cleanly.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/integration/test_player_integration.py tests/unit/services/player -q
 ```
 **Commit:** `feat(player): inject gatekeeper and abort move on quota exhaustion`
@@ -91,7 +91,7 @@ tokens) when present, and a prominent banner line when `terminated_reason == "qu
 any turn carries that flag.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 ```
 Run `print_transcript` against an existing results file (or a small fixture) and eyeball the new
 section. (apps/ is excluded from coverage, so no pytest gate here — lint + manual check.)
@@ -112,7 +112,7 @@ HALF_OPEN probe success closes / failure re-opens, `acquire` timeout, `gate()` c
 `snapshot()` returns JSON-serializable state.
 **Verify:**
 ```
-uv run ruff check src tests
+uv run ruff check <files-you-changed>
 uv run pytest tests/unit/shared/test_api_gatekeeper.py -q
 uv run pytest -q
 ```
