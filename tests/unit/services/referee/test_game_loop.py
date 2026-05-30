@@ -8,7 +8,13 @@ from typing import Any
 
 import pytest
 
-from agent_arena.constants import PROTOCOL_VERSION, TERMINATED_ABORTED, TERMINATED_DISCONNECT
+from agent_arena.constants import (
+    FLAG_QUOTA_ABORTED,
+    PROTOCOL_VERSION,
+    TERMINATED_ABORTED,
+    TERMINATED_DISCONNECT,
+    TERMINATED_QUOTA_ABORTED,
+)
 from agent_arena.services.game.debate_engine import DebateEngine
 from agent_arena.services.game.debate_state import DebateState
 from agent_arena.services.protocol.codec import encode
@@ -45,7 +51,10 @@ def _make_loop(pro_ch: InMemoryChannel, con_ch: InMemoryChannel,
     )
 
 
-def _make_move_envelope(text: str, seq: int = 1) -> bytes:
+def _make_move_envelope(text: str, seq: int = 1, flag: str | None = None) -> bytes:
+    payload: dict[str, Any] = {"move": {"text": text}}
+    if flag is not None:
+        payload["flag"] = flag
     return encode(Envelope(
         protocol_version=PROTOCOL_VERSION,
         type=MessageType.MOVE_SUBMIT,
@@ -53,7 +62,7 @@ def _make_move_envelope(text: str, seq: int = 1) -> bytes:
         sender="player",
         seq=seq,
         timestamp=datetime.now(timezone.utc).isoformat(),
-        payload={"move": {"text": text}},
+        payload=payload,
     ))
 
 
@@ -235,6 +244,23 @@ def test_disconnect_produces_tagged_game_over():
     msgs = _drain_outbox(pro_a) + _drain_outbox(con_a)
     game_overs = [m for m in msgs if m.get("type") == MessageType.GAME_OVER.value]
     assert len(game_overs) == 2   # one per channel
+
+
+def test_quota_aborted_move_flag_produces_tagged_game_over():
+    pro_a, pro_b = InMemoryChannel.make_pair()
+    con_a, _con_b = InMemoryChannel.make_pair()
+
+    pro_b._out_q.put(_make_move_envelope("", flag=FLAG_QUOTA_ABORTED))  # type: ignore[attr-defined]
+
+    loop = _make_loop(pro_a, con_a, timeout=1.0)
+    state = loop.run()
+    assert state.status == "COMPLETE"
+    assert state.verdict is not None
+    assert state.verdict.get("terminated_reason") == TERMINATED_QUOTA_ABORTED
+
+    msgs = _drain_outbox(pro_a) + _drain_outbox(con_a)
+    game_overs = [m for m in msgs if m.get("type") == MessageType.GAME_OVER.value]
+    assert len(game_overs) == 2
 
 
 def test_malformed_content_sends_error_and_continues():

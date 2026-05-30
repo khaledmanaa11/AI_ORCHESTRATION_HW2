@@ -8,7 +8,11 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from agent_arena.constants import ERROR_ILLEGAL_MOVE, ERROR_MALFORMED_MESSAGE
+from agent_arena.constants import (
+    ERROR_ILLEGAL_MOVE,
+    ERROR_MALFORMED_MESSAGE,
+    FLAG_QUOTA_ABORTED,
+)
 from agent_arena.services.game.debate_engine import DebateEngine
 from agent_arena.services.game.debate_state import DebateState
 from agent_arena.services.game.debate_state import active_side as _aside
@@ -29,6 +33,10 @@ BcastFn = Callable[[MessageType, dict], None]
 
 class DisconnectError(Exception):
     """Raised when a player connection is lost mid-turn."""
+
+
+class QuotaAbortedError(Exception):
+    """Raised when a player reports API quota exhaustion mid-turn."""
 
 
 def recv_timed(ch: Channel, timeout: float) -> bytes | None:
@@ -116,7 +124,12 @@ def run_turn(  # noqa: C901
                     {"code": ERROR_MALFORMED_MESSAGE, "message": "unexpected_type"})
             continue
 
-        move: dict[str, Any] = env.payload.get("move", {})
+        move_payload = env.payload.get("move", {})
+        move: dict[str, Any] = move_payload if isinstance(move_payload, dict) else {}
+        flag = env.payload.get("flag", move.get("flag"))
+        if flag == FLAG_QUOTA_ABORTED:
+            raise QuotaAbortedError
+
         ok, reason = engine.validate_move(state, move)           # Tier-1 mechanical
         if not ok:
             send_fn(side, MessageType.ERROR,

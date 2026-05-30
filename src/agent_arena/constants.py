@@ -38,7 +38,9 @@ FLAG_CONCESSION = "concession"
 FLAG_TIMEOUT = "timeout"
 FLAG_RETRY_EXHAUSTED = "retry_exhausted"
 FLAG_OFF_TOPIC = "off_topic"
+FLAG_QUOTA_ABORTED = "quota_aborted"
 
 # Terminated-reason tokens (8.3, 8.6 — RG2.2)
 TERMINATED_DISCONNECT = "disconnect"
 TERMINATED_ABORTED = "aborted"
+TERMINATED_QUOTA_ABORTED = "quota_aborted"

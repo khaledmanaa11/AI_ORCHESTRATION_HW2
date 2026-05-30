@@ -7,7 +7,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from agent_arena.constants import PROTOCOL_VERSION, TERMINATED_ABORTED, TERMINATED_DISCONNECT
+from agent_arena.constants import (
+    PROTOCOL_VERSION,
+    TERMINATED_ABORTED,
+    TERMINATED_DISCONNECT,
+    TERMINATED_QUOTA_ABORTED,
+)
 from agent_arena.services.game.debate_engine import DebateEngine
 from agent_arena.services.game.debate_state import DebateState
 from agent_arena.services.protocol.codec import encode
@@ -15,6 +20,7 @@ from agent_arena.services.protocol.envelope import Envelope
 from agent_arena.services.protocol.message_types import MessageType
 from agent_arena.services.referee._turn_runner import (
     DisconnectError,
+    QuotaAbortedError,
     run_turn,
 )
 from agent_arena.services.referee.brain.base import (
@@ -29,7 +35,6 @@ from agent_arena.shared.api_gatekeeper import GatekeeperError
 from agent_arena.shared.transport.channel import Channel
 
 logger = logging.getLogger(__name__)
-TERMINATED_QUOTA_ABORTED = "quota_aborted"
 
 
 def _enc(match_id: str, t: MessageType, payload: dict[str, Any], seq: int) -> bytes:
@@ -90,6 +95,9 @@ class DebateGameLoop:
             state = self._run_turns(state)
         except DisconnectError:
             terminated = TERMINATED_DISCONNECT
+            state = self._forced_verdict(state, terminated)
+        except QuotaAbortedError:
+            terminated = TERMINATED_QUOTA_ABORTED
             state = self._forced_verdict(state, terminated)
         except GatekeeperError:
             logger.exception("Gatekeeper aborted match=%s", self.match_id)
