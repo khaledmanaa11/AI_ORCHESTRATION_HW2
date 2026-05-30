@@ -136,7 +136,21 @@ These are ranked by `(impact on the AI grader) / (implementation time)`.
 
 **Risk**: low. Need a regression test that the parser still accepts the slimmer JSON. ~30 min.
 
-### Fix K — Add `motion_neutral` judge variant *(already shipped — see commit-pending edits)*
+### Fix L — Side-symmetric few-shot playbooks distilled from highest-margin wins *(shipped)*
+
+**What**: a new `SIDE_PLAYBOOK` dict in `player_prompts.py` injects 5 distilled winning-pattern bullets into each player's prompt prefix, mined from the top-5-margin matches **per side** across `sweep_001` + `sweep_full` (67 PRO wins, 153 CON wins available; top 5 each used).
+
+**Why few-shot and not RAG**: the corpus is too small (60 PRO wins, mostly first-speaker-dependent) for retrieval to add signal over noise. Distilled patterns scale better at this n and add only ~150 tokens/turn vs RAG's per-turn context blowup.
+
+**Symmetry note**: both PRO and CON get playbooks of equal length and equal structure, mined by the same procedure. This keeps the experimental design honest — we are not selectively boosting only the disadvantaged side. If PRO win rate climbs after this change, it is because the model previously lacked the *strategy hooks* CON happened to be using implicitly, not because we tilted the prompt.
+
+**Falsifiable prediction**: a follow-up `--variants naive --k 5` sweep with playbooks ON should show PRO pair-avg margin closer to 0 than the current −0.30. If it does, prompt-level scaffolding matters. If it doesn't, the bias is truly in the judge's worldview (which `motion_neutral` then tests).
+
+**Where**: `src/agent_arena/services/player/brain/player_prompts.py` — `SIDE_PLAYBOOK` dict + one line in `build_player_prompt`.
+
+**Risk**: very low. Side prefix is stable per side, so Gemini implicit caching still works (one cached prefix per side, not per match). No schema change.
+
+### Fix K — Add `motion_neutral` judge variant *(shipped)*
 
 Diagnosed from rationale text inspection: 4/4 sampled losing rationales cite the *substance* of CON's arguments ("responsibility gap", "Flash Crash", "adversarial attacks") as decisive. None of the existing 5 variants tells the judge that risk-framed arguments are not inherently weightier than benefit-framed ones — they only address procedural biases (sycophancy, fabrication, positional order).
 

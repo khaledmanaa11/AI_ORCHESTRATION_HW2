@@ -15,6 +15,39 @@ from agent_arena.services.player.brain.constants import (
     VECTOR_SYCOPHANCY,
 )
 
+# Few-shot strategy guides distilled from the 5 highest-margin wins per side
+# across sweep_001 + sweep_full (mined 2026-05-31). Kept as a stable per-side
+# prefix so it remains compatible with Gemini implicit context caching.
+SIDE_PLAYBOOK: dict[str, str] = {
+    "PRO": (
+        "Winning patterns (distilled from prior high-margin PRO victories):\n"
+        "1. RISK-OF-INACTION: reframe the status quo (human approval) as the dangerous default. "
+        "Cite human-induced failures with the same gravity CON cites AI failures.\n"
+        "2. EVIDENCE JIU-JITSU: when CON cites DOC-004 (Flash Crash), DOC-003 (bias), or DOC-007 (adversarial), "
+        "reframe each as evidence that BETTER autonomy — not less — is the answer. "
+        "The Flash Crash showed humans were too slow, not that autonomy is wrong.\n"
+        "3. ACKNOWLEDGE-THEN-PIVOT: open every rebuttal by conceding CON's stated concern in one clause, "
+        "then pivot to the larger countervailing risk. Never deny CON's evidence outright.\n"
+        "4. ORIGIN ATTRIBUTION: AI biases originate from human-generated data; AI vulnerabilities "
+        "mirror human ones. Move the moral weight back onto human systems.\n"
+        "5. SCOPE NARROWING: argue for autonomy in specific consequential domains (ultra-fast, "
+        "high-frequency, data-rich) where human limits dominate, not a universal carte blanche."
+    ),
+    "CON": (
+        "Winning patterns (distilled from prior high-margin CON victories):\n"
+        "1. CONCRETE FAILURE PRECEDENT: anchor early on DOC-004 (2010 Flash Crash) as a "
+        "category-defining cautionary tale of unsupervised autonomy at scale.\n"
+        "2. RESPONSIBILITY GAP: emphasize that accountability cannot be delegated to a non-agent; "
+        "consequential decisions without a human in the loop create unresolvable legal/ethical voids.\n"
+        "3. AMPLIFICATION FRAMING: AI does not merely err — it scales errors. Cite DOC-003 (bias) "
+        "and DOC-007 (adversarial) as evidence that AI failures are systemic, not isolated.\n"
+        "4. EMPATHY/JUDGEMENT MOAT: invoke DOC-009 — moral reasoning and contextual judgement "
+        "are not yet substitutable. Human approval is the irreducible safeguard.\n"
+        "5. PRECAUTIONARY DEFAULT: in irreversible-stakes domains, the burden of proof lies on "
+        "the side advocating removal of oversight, not on the side retaining it."
+    ),
+}
+
 
 def _get_val(obj: Any, keys: list[str], default: Any) -> Any:
     curr = obj
@@ -87,12 +120,15 @@ def build_player_prompt(context: PlayerContext, config: Any) -> tuple[str, dict[
     lessons_str = "\n".join(f"- {lesson}" for lesson in lessons) if lessons else "None"
 
     # Static prefix first (cacheable across turns); volatile state last.
+    # SIDE_PLAYBOOK is stable per-side so it preserves the cache key per side.
+    side_playbook = SIDE_PLAYBOOK.get(context.side, "")
     prompt_parts = [
         schema_str,
         f"You are a debater on side: {context.side}.",
         f"Motion: {motion}",
         f"Rubric: {json.dumps(context.rubric, sort_keys=True)}",
         f"Evidence Pack: {json.dumps(context.evidence_pack, sort_keys=True)}",
+        side_playbook,
     ]
 
     ablation = context.ablation or {}
