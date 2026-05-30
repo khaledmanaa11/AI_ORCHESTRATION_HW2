@@ -16,10 +16,20 @@ class TcpChannel(Channel):
         self._sock = sock
 
     def send(self, data: bytes) -> None:
-        self._sock.sendall(data)
+        try:
+            self._sock.sendall(data)
+        except TimeoutError as exc:
+            raise ConnectionClosedError("socket write timed out") from exc
+        except OSError as exc:
+            raise ConnectionClosedError(f"socket write error: {exc}") from exc
 
     def recv(self) -> bytes:
-        data = self._sock.recv(4096)
+        try:
+            data = self._sock.recv(4096)
+        except TimeoutError as exc:
+            raise ConnectionClosedError("socket read timed out") from exc
+        except OSError as exc:
+            raise ConnectionClosedError(f"socket read error: {exc}") from exc
         if data == b"":
             raise ConnectionClosedError("peer closed the TCP connection")
         return data

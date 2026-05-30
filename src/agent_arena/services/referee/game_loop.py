@@ -84,6 +84,22 @@ class DebateGameLoop:
     # ------------------------------------------------------------------ main
     def run(self) -> DebateState:
         """Run the full match; every path after GAME_START reaches one GAME_OVER."""
+        read_timeout = 15.0
+        try:
+            from agent_arena.shared.config import load_setup_config
+            cfg = load_setup_config("config/setup.json")
+            if cfg and cfg.network and cfg.network.read_timeout_seconds:
+                read_timeout = cfg.network.read_timeout_seconds
+        except Exception:
+            pass
+
+        for ch in self.channels.values():
+            inner_ch = ch
+            while hasattr(inner_ch, "_inner"):
+                inner_ch = inner_ch._inner
+            if hasattr(inner_ch, "_sock"):
+                inner_ch._sock.settimeout(read_timeout)
+
         state = self.engine.get_initial_state()
         snap = state.rules_snapshot
         fs = snap.get("first_speaker", "PRO")

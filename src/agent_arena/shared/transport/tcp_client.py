@@ -53,7 +53,15 @@ class TcpClient:
                 raise ConnectionFailedError(
                     f"failed to connect to {self._host}:{self._port}"
                 ) from exc
-            sock.settimeout(None)
+            read_timeout = None
+            try:
+                from agent_arena.shared.config import load_setup_config
+                cfg = load_setup_config("config/setup.json")
+                if cfg and cfg.network and cfg.network.read_timeout_seconds:
+                    read_timeout = cfg.network.read_timeout_seconds
+            except Exception:
+                pass
+            sock.settimeout(read_timeout)
             self._sock = sock
             logger.info("Connected to %s:%d", self._host, self._port)
             return TcpChannel(sock)
