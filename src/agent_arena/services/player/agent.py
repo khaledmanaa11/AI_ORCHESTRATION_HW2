@@ -5,6 +5,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
+from agent_arena.constants import PROTOCOL_VERSION
 from agent_arena.services.player.brain.seeded_brain import SeededPlayerBrain
 from agent_arena.services.protocol.codec import decode, encode
 from agent_arena.services.protocol.envelope import Envelope
@@ -50,7 +51,7 @@ class PlayerAgent:
     def _send(self, t: MessageType, payload: dict[str, Any]) -> None:
         self.seq += 1
         env = Envelope(
-            protocol_version="1.00",
+            protocol_version=PROTOCOL_VERSION,
             type=t,
             match_id=self.match_id,
             sender=self.player_id,

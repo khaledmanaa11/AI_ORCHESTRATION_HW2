@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: A3**
+**NEXT: A4**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -16,7 +16,7 @@
 ## Part A — Runtime safety & small fixes → `PART_A_runtime_fixes.md`
 - [x] A1 — Enforce `validate()` on inbound REGISTER + add `ErrorCode` enum + send typed error
 - [x] A2 — Send `ERROR` before closing the 3rd+ connection
-- [ ] A3 — Replace hardcoded `"1.00"` with `PROTOCOL_VERSION` import in player agent
+- [x] A3 — Replace hardcoded `"1.00"` with `PROTOCOL_VERSION` import in player agent
 - [ ] A4 — Narrow `TcpClient.connect` except clause (stop masking non-retryable errors)
 - [ ] A5 — Add `max_retries` + `backoff_base` to config; pass `max_frame_size` to FramedChannel
 - [ ] A6 — Delete duplicate `TERMINATED_*` constants in `result.py`, import from `constants`
