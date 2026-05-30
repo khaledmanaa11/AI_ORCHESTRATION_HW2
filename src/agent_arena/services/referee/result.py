@@ -6,10 +6,11 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from agent_arena.constants import TERMINATED_ABORTED, TERMINATED_DISCONNECT
+
 logger = logging.getLogger(__name__)
 
-TERMINATED_DISCONNECT = "disconnect"
-TERMINATED_ABORTED = "aborted"
+__all__ = ["TERMINATED_ABORTED", "TERMINATED_DISCONNECT", "write_trajectory"]
 
 
 def write_trajectory(

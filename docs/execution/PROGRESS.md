@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: A6**
+**NEXT: B1**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -19,7 +19,7 @@
 - [x] A3 — Replace hardcoded `"1.00"` with `PROTOCOL_VERSION` import in player agent
 - [x] A4 — Narrow `TcpClient.connect` except clause (stop masking non-retryable errors)
 - [x] A5 — Add `max_retries` + `backoff_base` to config; pass `max_frame_size` to FramedChannel
-- [ ] A6 — Delete duplicate `TERMINATED_*` constants in `result.py`, import from `constants`
+- [x] A6 — Delete duplicate `TERMINATED_*` constants in `result.py`, import from `constants`
 
 ## Part B — API Gatekeeper integration → `PART_B_gatekeeper.md`
 - [ ] B1 — Wire `APIGatekeeper` into referee_app; write `api_state` into verdict
