@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: E5**
+**NEXT: F1**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -43,7 +43,7 @@
 - [x] E2 — Stream B (player private-capture) aggregation in sweep_runner
 - [x] E3 — Per-vector teardown (one-at-a-time ablation) mode in sweep_runner
 - [x] E4 — Real citation grounding check in `LLMRefereeBrain._verify_grounding`
-- [ ] E5 — Guard test: protocol dir unchanged + `PROTOCOL_VERSION == "1.00"`
+- [x] E5 — Guard test: protocol dir unchanged + `PROTOCOL_VERSION == "1.00"`
 
 ## Part F — SDK & integration → `PART_F_sdk_integration.md`
 - [ ] F1 — Implement `ArenaSDK.start_referee` / `start_player`
