@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: B5**
+**NEXT: C1**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -26,7 +26,7 @@
 - [x] B2 — Add `quota_aborted` handling branch in `_turn_runner`
 - [x] B3 — Wire `APIGatekeeper` into player_app + agent; abort move on `GatekeeperError`
 - [x] B4 — `print_transcript`: gatekeeper section + `quota_aborted` banner
-- [ ] B5 — Unit tests for `APIGatekeeper` (FakeClock, all behaviors)
+- [x] B5 — Unit tests for `APIGatekeeper` (FakeClock, all behaviors)
 
 ## Part C — Fault-tolerance wiring → `PART_C_fault_tolerance.md`
 - [ ] C1 — Wire ShutdownCoordinator + WatchdogThread + HeartbeatSender into referee
