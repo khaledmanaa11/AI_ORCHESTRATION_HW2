@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: G4**
+**NEXT: G5**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -56,7 +56,7 @@
 - [x] G1 — Reconcile Anthropic→Gemini in `PRD.md` + `PLAN.md`
 - [x] G2 — Write `docs/PRD_referee_brain.md`
 - [x] G3 — Write `PLAN_protocol.md` + `TODO_protocol.md`
-- [ ] G4 — Write `PLAN_matchmaking.md` + `TODO_matchmaking.md`; fix PRD roles to PRO/CON
+- [x] G4 — Write `PLAN_matchmaking.md` + `TODO_matchmaking.md`; fix PRD roles to PRO/CON
 - [ ] G5 — Write `PLAN_game_engine.md` + `TODO_game_engine.md`; reconcile PRD signatures
 - [ ] G6 — Fix stale statuses in `docs/TODO.md`
 

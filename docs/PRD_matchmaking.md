@@ -9,7 +9,7 @@ The Matchmaking mechanism manages the initial lifecycle of player connections. I
   - `REGISTER` messages containing `agent_id` and `protocol_version`.
 - **Output**:
   - `REGISTER_ACK` (success or error payload).
-  - `ROLE_ASSIGN` containing the assigned role (e.g. `PLAYER_1`, `PLAYER_2` or `X`, `O`) and game config.
+  - `ROLE_ASSIGN` containing the assigned role (e.g. `PRO`, `CON`) and game config.
   - An active match context with exactly two registered player channels.
 
 ## 3. Constraints
