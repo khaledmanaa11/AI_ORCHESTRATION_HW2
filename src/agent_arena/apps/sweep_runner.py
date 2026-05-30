@@ -129,6 +129,7 @@ def write_streams(
     pro_master: bool,
     con_master: bool,
     match_id: str | None = None,
+    run_id: str = "run_001",
 ) -> None:
     """Process match results and append records to streams A, B, C."""
     if not state or not state.verdict:
@@ -153,6 +154,33 @@ def write_streams(
                 "margin": margin,
                 "final_verdict_rationale": rationale,
             }) + "\n")
+
+    # Aggregate Stream B (player private-capture) (E2)
+    sb_path = results_dir / "stream_b_private_capture.jsonl"
+    run_dir = results_dir / run_id
+    if run_dir.exists():
+        for side in ("PRO", "CON"):
+            p_file = run_dir / f"{m_id}.player_{side}.jsonl"
+            if p_file.exists():
+                try:
+                    with p_file.open("r", encoding="utf-8") as pf:
+                        rows = []
+                        for line in pf:
+                            line = line.strip()
+                            if not line:
+                                continue
+                            row = json.loads(line)
+                            row["match_id"] = m_id
+                            row["seed"] = seed
+                            if "turn_number" not in row:
+                                row["turn_number"] = 0
+                            rows.append(row)
+                        if rows:
+                            with sb_path.open("a", encoding="utf-8") as sbf:
+                                for row in rows:
+                                    sbf.write(json.dumps(row) + "\n")
+                except Exception as e:
+                    logger.error("Failed to aggregate private capture file %s: %s", p_file, e)
 
     sc_path = results_dir / "stream_c_metadata.jsonl"
     with sc_path.open("a", encoding="utf-8") as f:
@@ -247,7 +275,10 @@ def run_sweep(
         )
         if not exc:
             with streams_lock:
-                write_streams(results_dir, st, seed, variant, pro_master, con_master, match_id)
+                write_streams(
+                    results_dir, st, seed, variant, pro_master, con_master, match_id,
+                    run_id=config.debate.match.run_id
+                )
         update_summary(st)
 
     work_items = []

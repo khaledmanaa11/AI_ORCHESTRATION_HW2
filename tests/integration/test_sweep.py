@@ -10,10 +10,23 @@ import pytest
 from agent_arena.apps.sweep_runner import run_sweep
 
 
-def test_sweep_runner_offline_and_idempotency(tmp_path: Path) -> None:
-    """Verify that run_sweep runs offline matches, outputs summary.json, streams A and C, and refuses overwrite."""
+def test_sweep_runner_offline_and_idempotency(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify that run_sweep runs offline matches, outputs summary.json, streams A, B, and C, and refuses overwrite."""
     config_src = Path("config/setup.json")
     assert config_src.exists()
+
+    from agent_arena.services.player.brain.seeded_brain import SeededPlayerBrain
+    original_generate = SeededPlayerBrain.generate
+
+    def patched_generate(self, context):
+        decision = original_generate(self, context)
+        decision.trace = {
+            "dummy_val": "test_trace_data",
+            "turn_number": context.state.get("turn_number", 0) + 1
+        }
+        return decision
+
+    monkeypatch.setattr(SeededPlayerBrain, "generate", patched_generate)
 
     with config_src.open("r", encoding="utf-8") as f:
         data = json.load(f)
@@ -38,10 +51,12 @@ def test_sweep_runner_offline_and_idempotency(tmp_path: Path) -> None:
 
     # Check that stream files exist and have content
     sa_file = sweep_dir / "stream_a_trajectory.jsonl"
+    sb_file = sweep_dir / "stream_b_private_capture.jsonl"
     sc_file = sweep_dir / "stream_c_metadata.jsonl"
     summary_file = sweep_dir / "summary.json"
 
     assert sa_file.exists()
+    assert sb_file.exists()
     assert sc_file.exists()
     assert summary_file.exists()
 
@@ -50,6 +65,22 @@ def test_sweep_runner_offline_and_idempotency(tmp_path: Path) -> None:
         assert len(sa_lines) > 0
         for line in sa_lines:
             json.loads(line)
+
+    with sb_file.open("r", encoding="utf-8") as f:
+        sb_lines = f.readlines()
+        assert len(sb_lines) > 0
+        for line in sb_lines:
+            row = json.loads(line)
+            assert "match_id" in row
+            assert "seed" in row
+            assert "turn_number" in row
+            assert row["dummy_val"] == "test_trace_data"
+
+    # Assert that per-player capture files were not deleted (E2)
+    run_dir = sweep_dir / "run_001"
+    assert run_dir.exists()
+    player_files = list(run_dir.glob("*.player_*.jsonl"))
+    assert len(player_files) > 0
 
     with sc_file.open("r", encoding="utf-8") as f:
         sc_lines = f.readlines()

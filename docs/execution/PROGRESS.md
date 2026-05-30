@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: E2**
+**NEXT: E3**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -40,7 +40,7 @@
 
 ## Part E — Referee sweep & analysis → `PART_E_referee_sweep.md`
 - [x] E1 — `first_speaker` flip in sweep_runner mirror pairs
-- [ ] E2 — Stream B (player private-capture) aggregation in sweep_runner
+- [x] E2 — Stream B (player private-capture) aggregation in sweep_runner
 - [ ] E3 — Per-vector teardown (one-at-a-time ablation) mode in sweep_runner
 - [ ] E4 — Real citation grounding check in `LLMRefereeBrain._verify_grounding`
 - [ ] E5 — Guard test: protocol dir unchanged + `PROTOCOL_VERSION == "1.00"`
