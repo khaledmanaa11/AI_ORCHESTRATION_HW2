@@ -20,6 +20,7 @@ from agent_arena.services.referee.brain.judge_prompts import (
     build_tiebreak_prompt,
     build_turn_prompt,
 )
+from agent_arena.shared import LLMCallerMixin
 from agent_arena.shared.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
@@ -40,13 +41,6 @@ class HolisticTiebreakResult(BaseModel):
 
 class HolisticRationaleResult(BaseModel):
     rationale: str = Field(description="Holistic rationale summarizing the debate and verdict.")
-
-
-class LLMCallerMixin:
-    """Mixin for testability. Overridden in unit tests to mock LLM calls."""
-
-    def _generate_json(self, prompt: str, schema: type[BaseModel]) -> BaseModel:
-        return self._client.generate_json(prompt, self._model_name, schema)  # type: ignore
 
 
 class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):

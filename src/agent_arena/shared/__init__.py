@@ -8,6 +8,7 @@ from agent_arena.shared.api_gatekeeper import (
     get_default_gatekeeper,
 )
 from agent_arena.shared.heartbeat import HeartbeatSender
+from agent_arena.shared.llm_caller import LLMCallerMixin
 from agent_arena.shared.shutdown import ShutdownCoordinator
 from agent_arena.shared.watchdog import WatchdogThread
 
@@ -19,6 +20,7 @@ __all__ = [
     "GatekeeperTimeoutError",
     "get_default_gatekeeper",
     "HeartbeatSender",
+    "LLMCallerMixin",
     "ShutdownCoordinator",
     "WatchdogThread",
 ]

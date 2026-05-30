@@ -8,6 +8,7 @@ from agent_arena.services.player.brain.constants import VECTOR_BESTN_JUDGE_SELEC
 from agent_arena.services.player.brain.output_parser import parse as parse_output
 from agent_arena.services.player.brain.player_prompts import build_player_prompt
 from agent_arena.services.player.brain.selector import pick as pick_draft
+from agent_arena.shared import LLMCallerMixin
 from agent_arena.shared.llm_client import LLMClient
 
 
@@ -26,7 +27,7 @@ def _get_val(obj: Any, keys: list[str], default: Any) -> Any:
     return curr
 
 
-class LLMPlayerBrain(PlayerBrain):
+class LLMPlayerBrain(LLMCallerMixin, PlayerBrain):
     """LLM-backed player brain using the shared LLM client (FR-PB1, FR-PB2)."""
 
     def __init__(self, client: LLMClient, config: Any) -> None:
