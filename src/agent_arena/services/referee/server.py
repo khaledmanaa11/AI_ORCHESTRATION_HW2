@@ -45,6 +45,7 @@ class RefereeServer:
             config.network.port,
             config.network.player_count,
             self.on_connect,
+            self.on_reject,
         )
         self.registered_players: dict[str, Channel] = {}
         self.lock = threading.Lock()
@@ -73,6 +74,10 @@ class RefereeServer:
             {"code": code, "message": message},
             1,
         )
+
+    def on_reject(self, ch: Channel) -> None:
+        framed_ch = FramedChannel(ch, self.config.framing.max_frame_size_bytes)
+        self._send_error(framed_ch, "Match is full", code=ErrorCode.MATCH_FULL)
 
     def on_connect(self, ch: Channel) -> None:
         try:

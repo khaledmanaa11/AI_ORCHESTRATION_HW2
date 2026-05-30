@@ -38,11 +38,13 @@ class TcpServer:
         port: int,
         player_count: int,
         on_connect: Callable[[Channel], None],
+        on_reject: Callable[[Channel], None] | None = None,
     ) -> None:
         self._host = host
         self._port = port
         self._player_count = player_count
         self._on_connect = on_connect
+        self._on_reject = on_reject
         self._sock: socket.socket | None = None
         self._accept_thread: threading.Thread | None = None
 
@@ -87,7 +89,13 @@ class TcpServer:
             except OSError:
                 return
             logger.warning("Rejecting extra connection from %s", addr)
-            TcpChannel(conn).close()
+            channel = TcpChannel(conn)
+            if self._on_reject is not None:
+                try:
+                    self._on_reject(channel)
+                except Exception:
+                    logger.exception("Error while rejecting extra connection")
+            channel.close()
 
     def stop(self) -> None:
         if self._sock is not None:
