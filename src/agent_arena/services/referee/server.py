@@ -159,6 +159,8 @@ class RefereeServer:
                 if player_id in self.registered_players:
                     framed_ch.close()
                     return
+                framed_ch._arena_player_id = player_id
+                framed_ch._arena_watchdog = self.watchdog
                 self.registered_players[player_id] = framed_ch
                 self.watchdog.register(player_id)
                 self._start_heartbeat_sender(player_id, framed_ch)

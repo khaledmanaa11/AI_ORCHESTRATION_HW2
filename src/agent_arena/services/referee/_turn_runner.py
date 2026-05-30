@@ -72,6 +72,14 @@ def _make_ctx(
                           judge_variant, evidence_pack, list(trajectory))
 
 
+def _heartbeat_watchdog(channels: dict[str, Channel], side: str) -> None:
+    ch = channels[side]
+    watchdog = getattr(ch, "_arena_watchdog", None)
+    player_id = getattr(ch, "_arena_player_id", None)
+    if watchdog is not None and player_id is not None:
+        watchdog.heartbeat(player_id)
+
+
 def run_turn(  # noqa: C901
     state: DebateState,
     engine: DebateEngine,
@@ -111,6 +119,8 @@ def run_turn(  # noqa: C901
 
         if raw is None:                                           # timeout → penalised skip
             return engine.apply_move(state, {"text": ""}, flag="timeout", retry_count=attempt)
+
+        _heartbeat_watchdog(channels, side)
 
         try:
             env = decode(raw)

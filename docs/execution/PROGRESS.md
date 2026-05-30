@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: C2**
+**NEXT: C3**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -30,7 +30,7 @@
 
 ## Part C — Fault-tolerance wiring → `PART_C_fault_tolerance.md`
 - [x] C1 — Wire ShutdownCoordinator + WatchdogThread + HeartbeatSender into referee
-- [ ] C2 — Call `watchdog.heartbeat(player_id)` on every recv in `_turn_runner`
+- [x] C2 — Call `watchdog.heartbeat(player_id)` on every recv in `_turn_runner`
 - [ ] C3 — Wire fault-tolerance into player client/agent; GAME_OVER → request_shutdown
 - [ ] C4 — Fault-tolerance quality gate: ruff + coverage ≥85% on `shared/`, record in devlog
 
