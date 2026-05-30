@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from agent_arena.services.game.debate_state import active_side as get_active_side
+from agent_arena.services.game.debate_state import phase as get_phase
 from agent_arena.services.referee.brain.base import (
     RefereeBrain,
     RefereeContext,
@@ -13,8 +15,6 @@ from agent_arena.services.referee.brain.base import (
     RequestKind,
     aggregate_verdict,
 )
-from agent_arena.services.game.debate_state import active_side as get_active_side
-from agent_arena.services.game.debate_state import phase as get_phase
 from agent_arena.services.referee.brain.judge_prompts import (
     build_rationale_prompt,
     build_tiebreak_prompt,
@@ -94,12 +94,85 @@ class LLMRefereeBrain(LLMCallerMixin, RefereeBrain):
         """Arm-3 verification. Checks citations traceable to the pack."""
         if not evidence_pack:
             return True
-        for doc_id in evidence_pack:
-            if doc_id == "pack_id":
+
+        pack_keys = {k for k in evidence_pack if k != "pack_id"}
+        if not pack_keys:
+            return True
+
+        pack_keys_lower = {k.lower(): k for k in pack_keys}
+
+        import re
+        potential_tokens = set(re.findall(r"\bdoc[_-]\w+\b", text, re.IGNORECASE))
+
+        cited_ids = set()
+        for k in pack_keys:
+            if k.lower() in text.lower():
+                cited_ids.add(k)
+
+        # If a potential token in text looks like a citation but is NOT in the pack, fail
+        for token in potential_tokens:
+            if token.lower() not in pack_keys_lower:
+                return False
+
+        # If no doc IDs from the pack are cited at all, fail
+        if not cited_ids:
+            return False
+
+        # For each cited doc ID, check if its content is referenced
+        stop_words = {
+            "the", "a", "an", "and", "or", "but", "if", "then", "else", "when", "at",
+            "by", "from", "for", "with", "about", "against", "between", "into",
+            "through", "during", "before", "after", "above", "below", "to", "of",
+            "in", "on", "that", "this", "these", "those", "is", "are", "was", "were",
+            "be", "been", "being", "have", "has", "had", "do", "does", "did", "will",
+            "would", "shall", "should", "can", "could", "may", "might", "must", "us",
+            "we", "you", "they", "he", "she", "it", "i", "my", "your", "his", "her",
+            "its", "our", "their", "as", "who", "which", "what", "whom", "whose",
+            "why", "how"
+        }
+
+        for doc_id in cited_ids:
+            entry = evidence_pack[doc_id]
+            if isinstance(entry, dict):
+                content_parts = []
+                if "text" in entry:
+                    content_parts.append(str(entry["text"]))
+                if "title" in entry:
+                    content_parts.append(str(entry["title"]))
+                if not content_parts:
+                    content_parts.append(str(entry))
+                content_str = " ".join(content_parts)
+            else:
+                content_str = str(entry)
+
+            content_words = re.findall(r"\b\w+\b", content_str.lower())
+            doc_id_clean = doc_id.lower().replace("_", "").replace("-", "")
+
+            sig_content_words = {
+                w for w in content_words
+                if w not in stop_words
+                and not w.isdigit()
+                and w.replace("_", "").replace("-", "") != doc_id_clean
+            }
+
+            if not sig_content_words:
+                if content_str.lower() not in text.lower():
+                    return False
                 continue
-            if str(doc_id) in text:
-                return True
-        return False
+
+            text_words = re.findall(r"\b\w+\b", text.lower())
+            sig_text_words = {
+                w for w in text_words
+                if w not in stop_words
+                and not w.isdigit()
+                and w.replace("_", "").replace("-", "") != doc_id_clean
+            }
+
+            overlap = sig_content_words.intersection(sig_text_words)
+            if not overlap:
+                return False
+
+        return True
 
     def _render_verdict(self, context: RefereeContext) -> RefereeDecision:
         rubric = context.rubric or {}

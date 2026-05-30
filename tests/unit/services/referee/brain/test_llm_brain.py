@@ -76,7 +76,14 @@ def test_arm3_grounding(base_context: RefereeContext) -> None:
     brain = MockLLMRefereeBrain()
     base_context.judge_variant = "structural"
     assert brain.decide(base_context).turn_scores["evidence"] == 9.0
+
     base_context.move = {"text": "No citations."}
+    assert brain.decide(base_context).turn_scores["evidence"] == 0.0
+
+    base_context.move = {"text": "This is citing doc_B."}
+    assert brain.decide(base_context).turn_scores["evidence"] == 0.0
+
+    base_context.move = {"text": "This is citing doc_A with completely unrelated words."}
     assert brain.decide(base_context).turn_scores["evidence"] == 0.0
 
 def test_render_verdict(base_context: RefereeContext) -> None:
