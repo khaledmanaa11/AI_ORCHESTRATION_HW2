@@ -24,7 +24,7 @@
     "gatekeeper": {
       "rpm": 2000,
       "rpd": 10000,
-      "max_concurrency": 8,
+      "max_concurrency": 12,
       "breaker_threshold": 15,
       "breaker_window_seconds": 60.0,
       "breaker_cooldown_seconds": 180.0,
