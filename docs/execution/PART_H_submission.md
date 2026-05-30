@@ -10,6 +10,26 @@ what happened in the earlier `sweep_003` run — 242 of 250 matches forfeited). 
 ## H1 — Run the canonical ≥250-match sweep into `results/sweep_001/`
 **Goal:** Produce the real experiment dataset the submission analyzes, in the directory the PRD
 names (`results/sweep_001/`), with most matches actually completing (not forfeited).
+
+**What the run IS:** `sweep_runner.py` plays a matrix of debate matches. The matrix is
+`3 judge variants (naive/hardened/structural) × k seeds × 2 ablation sides (mirror pair)` =
+`6k` matches. `--real` sets `k=42` → **252 matches**, and uses the **Gemini** judge + player
+brains (every turn and every verdict is a live API call). The offline mode (no `--real`) uses
+deterministic seeded stub brains with no API calls and **no real experimental signal** — it is
+NOT acceptable for the submission dataset. Output streams: `stream_a_trajectory.jsonl` (per-turn),
+`stream_c_metadata.jsonl` (per-match condition cells), `summary.json` (completed/forfeited/wins).
+
+**The exact command:**
+```powershell
+uv run python -m agent_arena.apps.sweep_runner --real --sweep-id sweep_001 --workers 4
+```
+There is no `uv run sweep` console script — invoke the module with `python -m` as above.
+**Sanity-check first** with a cheap 12-match real run before the big one:
+```powershell
+uv run python -m agent_arena.apps.sweep_runner --real -k 2 --sweep-id sweep_realsmoke --workers 2
+```
+If that 12-match run forfeits most matches, the gatekeeper/quota is wrong → fix that (Part B) or
+mark this step BLOCKED. Do not launch the 252-match run until the smoke run mostly completes.
 **Read first:**
 - `src/agent_arena/apps/sweep_runner.py` and `sweep_concurrency.py` (how a sweep is launched, the idempotency guard that refuses a non-empty dir)
 - `results/sweep_003/summary.json` (the earlier failed run — read for comparison, do NOT delete)
