@@ -56,6 +56,15 @@ def build_turn_prompt(
             "Require every evidence claim to cite the shared evidence pack. Untraceable citations "
             "score evidence = 0.\n"
         )
+    elif variant == "debiased":
+        prompt += (
+            "POSITION BLINDNESS: Score this turn in complete isolation. "
+            "Ignore which turn number this is and ignore speaking order entirely — "
+            "it must not influence your scores in any direction. "
+            "Do not let recency or primacy affect your judgement. "
+            "Evaluate only the logical quality, evidence, rebuttal, and persuasion "
+            "of THIS utterance on its own merits, as if it is the only text you are reading.\n"
+        )
     else:
         prompt += "Apply the rubric straight, with no bias warnings or discounts.\n"
 

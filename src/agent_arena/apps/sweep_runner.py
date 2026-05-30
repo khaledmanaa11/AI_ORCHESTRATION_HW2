@@ -212,6 +212,7 @@ def run_sweep(
     move_timeout_seconds: float | None = None,
     workers: int = 4,
     ablate: bool = False,
+    variants: list[str] | None = None,
 ) -> None:
     """Run full sweep study over parameters (RJ2.1)."""
     config = load_setup_config(config_path)
@@ -305,7 +306,8 @@ def run_sweep(
                 work_items.append((variant, seed, True, False, vector))
                 work_items.append((variant, seed, False, True, vector))
     else:
-        for variant in ["naive", "hardened", "structural"]:
+        active_variants = variants if variants else ["naive", "hardened", "structural"]
+        for variant in active_variants:
             for seed in range(1, k + 1):
                 work_items.append((variant, seed, True, False, None))
                 work_items.append((variant, seed, False, True, None))
@@ -329,6 +331,11 @@ if __name__ == "__main__":
     parser.add_argument("--move-timeout", type=float, default=None)
     parser.add_argument("--workers", type=int, default=4, help="Number of workers")
     parser.add_argument("--ablate", action="store_true", help="Run per-vector one-at-a-time ablation sweep")
+    parser.add_argument(
+        "--variants", nargs="+", default=None,
+        help="Judge variants to run (default: naive hardened structural). "
+             "E.g. --variants debiased  or  --variants naive debiased",
+    )
     args = parser.parse_args()
 
     k = args.k if args.k is not None else (42 if args.real else 10)
@@ -340,4 +347,5 @@ if __name__ == "__main__":
         move_timeout_seconds=args.move_timeout,
         workers=args.workers,
         ablate=args.ablate,
+        variants=args.variants,
     )
