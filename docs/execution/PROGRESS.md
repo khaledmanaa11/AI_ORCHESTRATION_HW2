@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: E1**
+**NEXT: E2**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -39,7 +39,7 @@
 - [x] D2 — Gate-guard test: no player brain module imports `google.generativeai`
 
 ## Part E — Referee sweep & analysis → `PART_E_referee_sweep.md`
-- [ ] E1 — `first_speaker` flip in sweep_runner mirror pairs
+- [x] E1 — `first_speaker` flip in sweep_runner mirror pairs
 - [ ] E2 — Stream B (player private-capture) aggregation in sweep_runner
 - [ ] E3 — Per-vector teardown (one-at-a-time ablation) mode in sweep_runner
 - [ ] E4 — Real citation grounding check in `LLMRefereeBrain._verify_grounding`

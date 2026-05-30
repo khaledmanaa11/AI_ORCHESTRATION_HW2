@@ -63,6 +63,11 @@ def run_single_match(
     cfg.debate.match.seed = seed
     cfg.debate.match.results_dir = str(results_dir)
 
+    # Flip first_speaker for the second match in the mirror pair to net out position bias (E1)
+    if not pro_master and con_master:
+        current_first = cfg.debate.format.first_speaker
+        cfg.debate.format.first_speaker = "CON" if current_first == "PRO" else "PRO"
+
     server = RefereeServer(cfg, brain=ref_brain)
     server.start()
     time.sleep(0.1)

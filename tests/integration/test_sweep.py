@@ -55,8 +55,18 @@ def test_sweep_runner_offline_and_idempotency(tmp_path: Path) -> None:
         sc_lines = f.readlines()
         # 3 variants * 2 matches per variant * 2 for k=2 = 12 metadata lines
         assert len(sc_lines) == 12
+        pairs = {}
         for line in sc_lines:
-            json.loads(line)
+            meta = json.loads(line)
+            pair_id = meta["mirror_pair_id"]
+            pairs.setdefault(pair_id, []).append(meta)
+
+        assert len(pairs) == 6
+        for pair_id, matches in pairs.items():
+            assert len(matches) == 2, f"Expected 2 matches for {pair_id}, got {len(matches)}"
+            fs1 = matches[0]["first_speaker"]
+            fs2 = matches[1]["first_speaker"]
+            assert {fs1, fs2} == {"PRO", "CON"}, f"Expected opposite first_speakers for {pair_id}, got {fs1} and {fs2}"
 
     with summary_file.open("r", encoding="utf-8") as f:
         summary = json.load(f)
