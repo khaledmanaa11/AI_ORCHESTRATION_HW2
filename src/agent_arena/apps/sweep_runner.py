@@ -50,6 +50,7 @@ def run_single_match(
     results_dir: Path,
     player_brain_choice: str = "seeded",
     move_timeout_seconds: float | None = None,
+    ablated_vector: str | None = None,
 ) -> Any:
     """Run a single match and return final state, exceptions, and match_id."""
     cfg = copy.deepcopy(config)
@@ -80,9 +81,12 @@ def run_single_match(
             p_cfg = copy.deepcopy(cfg)
             p_cfg.debate.player.brain_choice = player_brain_choice
             p_cfg.debate.player.ablation.master = is_master
-            p_cfg.debate.player.ablation.vectors = (
-                dict.fromkeys(p_cfg.debate.player.ablation.vectors, True) if is_master else {}
-            )
+            if is_master:
+                p_cfg.debate.player.ablation.vectors = {
+                    v: (v != ablated_vector) for v in p_cfg.debate.player.ablation.vectors
+                }
+            else:
+                p_cfg.debate.player.ablation.vectors = {}
             client = PlayerClient(
                 player_id=pid,
                 host=cfg.network.host,
@@ -130,6 +134,7 @@ def write_streams(
     con_master: bool,
     match_id: str | None = None,
     run_id: str = "run_001",
+    ablated_vector: str | None = None,
 ) -> None:
     """Process match results and append records to streams A, B, C."""
     if not state or not state.verdict:
@@ -195,6 +200,7 @@ def write_streams(
             "evidence_pack_id": "evidence_pack_primary",
             "judge_variant": judge_variant,
             "player_ablation_master": pro_master or con_master,
+            "ablated_vector": ablated_vector,
         }) + "\n")
 
 
@@ -205,10 +211,13 @@ def run_sweep(
     offline: bool = True,
     move_timeout_seconds: float | None = None,
     workers: int = 4,
+    ablate: bool = False,
 ) -> None:
     """Run full sweep study over parameters (RJ2.1)."""
     config = load_setup_config(config_path)
     ref_brain = SimpleRefereeBrain() if offline else LLMRefereeBrain(provider=config.llm.provider)
+
+    ablate = ablate or getattr(config.debate.match, "ablation_mode", False)
 
     max_conc = config.llm.gatekeeper.max_concurrency
     max_workers = max(1, min(workers, max_conc // 2))
@@ -267,25 +276,39 @@ def run_sweep(
             summary["gatekeeper_final_snapshot"] = get_default_gatekeeper().snapshot()
             rewrite_summary(results_dir, summary)
 
-    def worker(variant: str, seed: int, pro_master: bool, con_master: bool) -> None:
+    def worker(variant: str, seed: int, pro_master: bool, con_master: bool, ablated_vector: str | None = None) -> None:
         player_brain_choice = "seeded" if offline else "llm"
         st, exc, match_id = run_single_match(
             config, variant, seed, pro_master, con_master, ref_brain,
-            results_dir, player_brain_choice, move_timeout_seconds
+            results_dir, player_brain_choice, move_timeout_seconds,
+            ablated_vector=ablated_vector
         )
         if not exc:
             with streams_lock:
                 write_streams(
                     results_dir, st, seed, variant, pro_master, con_master, match_id,
-                    run_id=config.debate.match.run_id
+                    run_id=config.debate.match.run_id,
+                    ablated_vector=ablated_vector
                 )
         update_summary(st)
 
     work_items = []
-    for variant in ["naive", "hardened", "structural"]:
+    if ablate:
+        variant = config.debate.judge.variant
+        vectors = list(config.debate.player.ablation.vectors.keys())
+        if not vectors:
+            vectors = ["sycophancy", "authority", "bandwagon", "fallacy", "adaptive_persona", "bestN_judge_select", "read_targeting"]
+        else:
+            vectors = sorted(vectors)
         for seed in range(1, k + 1):
-            work_items.append((variant, seed, True, False))
-            work_items.append((variant, seed, False, True))
+            for vector in vectors:
+                work_items.append((variant, seed, True, False, vector))
+                work_items.append((variant, seed, False, True, vector))
+    else:
+        for variant in ["naive", "hardened", "structural"]:
+            for seed in range(1, k + 1):
+                work_items.append((variant, seed, True, False, None))
+                work_items.append((variant, seed, False, True, None))
 
     execute_sweep_workers(
         work_items,
@@ -305,7 +328,16 @@ if __name__ == "__main__":
     parser.add_argument("--real", action="store_true", help="Use Gemini referee and player brains")
     parser.add_argument("--move-timeout", type=float, default=None)
     parser.add_argument("--workers", type=int, default=4, help="Number of workers")
+    parser.add_argument("--ablate", action="store_true", help="Run per-vector one-at-a-time ablation sweep")
     args = parser.parse_args()
 
     k = args.k if args.k is not None else (42 if args.real else 10)
-    run_sweep(args.config, k, sweep_id=args.sweep_id, offline=not args.real, move_timeout_seconds=args.move_timeout, workers=args.workers)
+    run_sweep(
+        args.config,
+        k,
+        sweep_id=args.sweep_id,
+        offline=not args.real,
+        move_timeout_seconds=args.move_timeout,
+        workers=args.workers,
+        ablate=args.ablate,
+    )

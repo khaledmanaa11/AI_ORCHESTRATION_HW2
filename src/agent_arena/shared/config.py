@@ -108,6 +108,7 @@ class DebateMatchConfig(BaseModel):
     seed: int
     run_id: str = "run_001"
     results_dir: str = "results"
+    ablation_mode: bool = False
 
 class DebateConfig(BaseModel):
     format: DebateFormatConfig = DebateFormatConfig()
