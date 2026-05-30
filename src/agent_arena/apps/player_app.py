@@ -5,6 +5,7 @@ import argparse
 import logging
 
 from agent_arena.services.player.client import PlayerClient
+from agent_arena.shared.api_gatekeeper import APIGatekeeper
 from agent_arena.shared.config import load_setup_config
 
 
@@ -29,6 +30,8 @@ def main() -> None:
     config = load_setup_config(args.config)
     if args.brain != "config":
         config.debate.player.brain_choice = args.brain
+    gatekeeper = APIGatekeeper(**config.llm.gatekeeper.model_dump())
+    object.__setattr__(config, "api_gatekeeper", gatekeeper)
 
     seed = args.seed if args.seed is not None else config.debate.match.seed
     host = args.host or config.network.host

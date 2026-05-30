@@ -5,11 +5,12 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from agent_arena.constants import PROTOCOL_VERSION
+from agent_arena.constants import FLAG_QUOTA_ABORTED, PROTOCOL_VERSION
 from agent_arena.services.player.brain.seeded_brain import SeededPlayerBrain
 from agent_arena.services.protocol.codec import decode, encode
 from agent_arena.services.protocol.envelope import Envelope
 from agent_arena.services.protocol.message_types import MessageType
+from agent_arena.shared.api_gatekeeper import GatekeeperError
 from agent_arena.shared.transport.channel import Channel
 
 logger = logging.getLogger(__name__)
@@ -85,7 +86,12 @@ class PlayerAgent:
                 if choice == "llm":
                     from agent_arena.services.player.brain.llm_brain import LLMPlayerBrain
                     from agent_arena.shared.llm_client import LLMClient
-                    self.brain = LLMPlayerBrain(client=LLMClient(provider=self.config.llm.provider), config=self.config)
+                    gatekeeper = _get_val(self.config, ["api_gatekeeper"], None)
+                    provider = _get_val(self.config, ["llm", "provider"], None)
+                    self.brain = LLMPlayerBrain(
+                        client=LLMClient(provider=provider, gatekeeper=gatekeeper),
+                        config=self.config,
+                    )
                 else:
                     self.brain = SeededPlayerBrain(self.seed, self.role)
         elif t == MessageType.MOVE_REQUEST:
@@ -109,7 +115,20 @@ class PlayerAgent:
                         scratchpad=self.scratchpad,
                         seed=self.seed,
                     )
-                    dec = self.brain.generate(ctx)
+                    try:
+                        dec = self.brain.generate(ctx)
+                    except GatekeeperError as exc:
+                        logger.warning(
+                            "Player %s aborting move generation: %s",
+                            self.player_id,
+                            exc,
+                        )
+                        self._send(
+                            MessageType.MOVE_SUBMIT,
+                            {"move": {"text": ""}, "flag": FLAG_QUOTA_ABORTED},
+                        )
+                        self.game_over = True
+                        return
                     move, trace = dec.move, dec.trace
                     if trace:
                         self.trace_buffer.append(trace)
