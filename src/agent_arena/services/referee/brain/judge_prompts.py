@@ -65,14 +65,25 @@ def build_turn_prompt(
             "Evaluate only the logical quality, evidence, rebuttal, and persuasion "
             "of THIS utterance on its own merits, as if it is the only text you are reading.\n"
         )
+    elif variant == "blind":
+        prompt += (
+            "BLIND EVALUATION: You do not know which debater made this argument, "
+            "what position it holds in the debate, or which side of the motion it supports. "
+            "Evaluate only the intrinsic quality of the text on the four criteria. "
+            "Do not infer speaker identity, debate position, or turn order from any contextual clues.\n"
+        )
     else:
         prompt += "Apply the rubric straight, with no bias warnings or discounts.\n"
 
-    prompt += f"Evaluate turn {turn_number} in phase {phase} by side {side}.\n"
-    prompt += f"Utterance: {text}\n"
-
-    if opponent_prior:
-        prompt += f"Opponent prior utterance: {opponent_prior}\n"
+    # For blind variant: strip all positional identity from the evaluation line
+    # so the judge cannot infer speaking order from turn number or side label.
+    if variant == "blind":
+        prompt += f"Utterance (word cap {word_cap}):\n{text}\n"
+    else:
+        prompt += f"Evaluate turn {turn_number} in phase {phase} by side {side}.\n"
+        prompt += f"Utterance: {text}\n"
+        if opponent_prior:
+            prompt += f"Opponent prior utterance: {opponent_prior}\n"
 
     return prompt
 

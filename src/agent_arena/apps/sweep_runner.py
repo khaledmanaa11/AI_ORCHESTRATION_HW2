@@ -51,6 +51,7 @@ def run_single_match(
     player_brain_choice: str = "seeded",
     move_timeout_seconds: float | None = None,
     ablated_vector: str | None = None,
+    flip_speaker: bool = False,
 ) -> Any:
     """Run a single match and return final state, exceptions, and match_id."""
     cfg = copy.deepcopy(config)
@@ -64,8 +65,10 @@ def run_single_match(
     cfg.debate.match.seed = seed
     cfg.debate.match.results_dir = str(results_dir)
 
-    # Flip first_speaker for the second match in the mirror pair to net out position bias (E1)
-    if not pro_master and con_master:
+    # Flip first_speaker for the second match in each mirror pair (E1).
+    # Previously inferred from pro_master/con_master; now explicit so baseline
+    # (both OFF) pairs are also correctly mirrored.
+    if flip_speaker:
         current_first = cfg.debate.format.first_speaker
         cfg.debate.format.first_speaker = "CON" if current_first == "PRO" else "PRO"
 
@@ -204,6 +207,9 @@ def write_streams(
         }) + "\n")
 
 
+ALL_JUDGE_VARIANTS = ["naive", "hardened", "structural", "debiased", "blind"]
+
+
 def run_sweep(
     config_path: str,
     k: int,
@@ -213,6 +219,7 @@ def run_sweep(
     workers: int = 4,
     ablate: bool = False,
     variants: list[str] | None = None,
+    include_baseline: bool = False,
 ) -> None:
     """Run full sweep study over parameters (RJ2.1)."""
     config = load_setup_config(config_path)
@@ -277,12 +284,20 @@ def run_sweep(
             summary["gatekeeper_final_snapshot"] = get_default_gatekeeper().snapshot()
             rewrite_summary(results_dir, summary)
 
-    def worker(variant: str, seed: int, pro_master: bool, con_master: bool, ablated_vector: str | None = None) -> None:
+    def worker(
+        variant: str,
+        seed: int,
+        pro_master: bool,
+        con_master: bool,
+        ablated_vector: str | None = None,
+        flip_speaker: bool = False,
+    ) -> None:
         player_brain_choice = "seeded" if offline else "llm"
         st, exc, match_id = run_single_match(
             config, variant, seed, pro_master, con_master, ref_brain,
             results_dir, player_brain_choice, move_timeout_seconds,
-            ablated_vector=ablated_vector
+            ablated_vector=ablated_vector,
+            flip_speaker=flip_speaker,
         )
         if not exc:
             with streams_lock:
@@ -293,24 +308,35 @@ def run_sweep(
                 )
         update_summary(st)
 
-    work_items = []
+    # work_items tuples: (variant, seed, pro_master, con_master, ablated_vector, flip_speaker)
+    work_items: list[tuple] = []
     if ablate:
         variant = config.debate.judge.variant
         vectors = list(config.debate.player.ablation.vectors.keys())
         if not vectors:
-            vectors = ["sycophancy", "authority", "bandwagon", "fallacy", "adaptive_persona", "bestN_judge_select", "read_targeting"]
+            vectors = ["sycophancy", "authority", "bandwagon", "fallacy",
+                       "adaptive_persona", "bestN_judge_select", "read_targeting"]
         else:
             vectors = sorted(vectors)
         for seed in range(1, k + 1):
             for vector in vectors:
-                work_items.append((variant, seed, True, False, vector))
-                work_items.append((variant, seed, False, True, vector))
+                work_items.append((variant, seed, True,  False, vector, False))
+                work_items.append((variant, seed, False, True,  vector, True))
     else:
         active_variants = variants if variants else ["naive", "hardened", "structural"]
         for variant in active_variants:
             for seed in range(1, k + 1):
-                work_items.append((variant, seed, True, False, None))
-                work_items.append((variant, seed, False, True, None))
+                # Mirror pair: pair[0] keeps configured first_speaker,
+                # pair[1] flips it to net out position bias.
+                work_items.append((variant, seed, True,  False, None, False))
+                work_items.append((variant, seed, False, True,  None, True))
+
+        if include_baseline:
+            # Baseline: neither player has manipulation — isolates judge behaviour
+            # from the manipulation toolkit. Uses naive judge as the reference variant.
+            for seed in range(1, k + 1):
+                work_items.append(("naive", seed, False, False, None, False))
+                work_items.append(("naive", seed, False, False, None, True))
 
     execute_sweep_workers(
         work_items,
@@ -333,10 +359,27 @@ if __name__ == "__main__":
     parser.add_argument("--ablate", action="store_true", help="Run per-vector one-at-a-time ablation sweep")
     parser.add_argument(
         "--variants", nargs="+", default=None,
-        help="Judge variants to run (default: naive hardened structural). "
-             "E.g. --variants debiased  or  --variants naive debiased",
+        metavar="VARIANT",
+        help="Judge variants to run. Default: naive hardened structural. "
+             "Available: naive hardened structural debiased blind. "
+             "E.g. --variants debiased blind",
+    )
+    parser.add_argument(
+        "--all", dest="all_variants", action="store_true",
+        help=f"Run all judge variants ({', '.join(ALL_JUDGE_VARIANTS)}) plus baseline. "
+             "Equivalent to: --variants naive hardened structural debiased blind --include-baseline",
+    )
+    parser.add_argument(
+        "--include-baseline", action="store_true",
+        help="Also run baseline matches (naive judge, both players OFF — no manipulation toolkit)",
     )
     args = parser.parse_args()
+
+    variants = args.variants
+    include_baseline = args.include_baseline
+    if args.all_variants:
+        variants = list(ALL_JUDGE_VARIANTS)
+        include_baseline = True
 
     k = args.k if args.k is not None else (42 if args.real else 10)
     run_sweep(
@@ -347,5 +390,6 @@ if __name__ == "__main__":
         move_timeout_seconds=args.move_timeout,
         workers=args.workers,
         ablate=args.ablate,
-        variants=args.variants,
+        variants=variants,
+        include_baseline=include_baseline,
     )
