@@ -12,6 +12,8 @@ class NetworkConfig(BaseModel):
     player_count: int = Field(2, description="Number of players required")
     connect_timeout_seconds: float = Field(5.0, description="Connection timeout")
     read_timeout_seconds: float = Field(15.0, description="Socket read timeout")
+    max_retries: int = Field(5, description="TCP connection retry attempts")
+    backoff_base: float = Field(0.1, description="Base delay for exponential retry backoff")
 
 class GameConfig(BaseModel):
     move_timeout_seconds: float = Field(10.0, description="Per-move timeout limit")

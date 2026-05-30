@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from agent_arena.services.player.agent import PlayerAgent
+from agent_arena.shared.config import FramingConfig, NetworkConfig
 from agent_arena.shared.transport.tcp_client import TcpClient
 
 logger = logging.getLogger(__name__)
@@ -20,17 +21,20 @@ class PlayerClient:
         port: int,
         connect_timeout: float,
         seed: int,
-        max_retries: int = 5,
-        backoff_base: float = 0.1,
+        max_retries: int | None = None,
+        backoff_base: float | None = None,
         config: Any = None,
     ) -> None:
+        network_config = getattr(config, "network", None) or NetworkConfig(host=host, port=port)
+        framing_config = getattr(config, "framing", None) or FramingConfig()
         self.player_id = player_id
         self.host = host
         self.port = port
         self.connect_timeout = connect_timeout
         self.seed = seed
-        self.max_retries = max_retries
-        self.backoff_base = backoff_base
+        self.max_retries = max_retries if max_retries is not None else network_config.max_retries
+        self.backoff_base = backoff_base if backoff_base is not None else network_config.backoff_base
+        self.max_frame_size_bytes = framing_config.max_frame_size_bytes
         self.config = config
         self.client: TcpClient | None = None
         self.agent: PlayerAgent | None = None
@@ -46,7 +50,7 @@ class PlayerClient:
         )
         ch = self.client.connect()
         from agent_arena.shared.transport.channel import FramedChannel
-        framed_ch = FramedChannel(ch)
+        framed_ch = FramedChannel(ch, self.max_frame_size_bytes)
         self.agent = PlayerAgent(self.player_id, framed_ch, self.seed, config=self.config)
         self.agent.run()
 

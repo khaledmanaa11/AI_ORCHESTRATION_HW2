@@ -5,7 +5,9 @@
     "port": 9000,
     "player_count": 2,
     "connect_timeout_seconds": 5.0,
-    "read_timeout_seconds": 15.0
+    "read_timeout_seconds": 15.0,
+    "max_retries": 5,
+    "backoff_base": 0.1
   },
   "game": {
     "move_timeout_seconds": 10.0,
