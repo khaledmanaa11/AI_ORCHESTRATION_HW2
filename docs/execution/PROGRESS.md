@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: G1**
+**NEXT: G2**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -53,7 +53,7 @@
 - [x] F5 — Enforce read/write socket timeouts after the handshake
 
 ## Part G — Docs & process reconciliation → `PART_G_docs.md`
-- [ ] G1 — Reconcile Anthropic→Gemini in `PRD.md` + `PLAN.md`
+- [x] G1 — Reconcile Anthropic→Gemini in `PRD.md` + `PLAN.md`
 - [ ] G2 — Write `docs/PRD_referee_brain.md`
 - [ ] G3 — Write `PLAN_protocol.md` + `TODO_protocol.md`
 - [ ] G4 — Write `PLAN_matchmaking.md` + `TODO_matchmaking.md`; fix PRD roles to PRO/CON

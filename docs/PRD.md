@@ -31,7 +31,7 @@ The project is delivered in two phases:
   with a trivial placeholder brain (no LLM). The focus is the **process model, TCP network,
   and message protocol**.
 - **Phase 2:** all three agents are upgraded to **LLM-backed brains** powered by the
-  author's Anthropic subscription. The networking layer does not change.
+  configured Gemini model. The networking layer does not change.
 
 ### 1.2 The Problem
 Building agents that act as **separate running programs talking to each other** requires a
@@ -110,10 +110,12 @@ architecture scales from `localhost` to multiple machines without redesign. See 
 ### 3.4 LLM Integration (Phase 2)
 - **FR-L1** An `LLMBrain` for both referee and each player that satisfies the same brain
   interface as the respective placeholder.
-- **FR-L2** LLM brains call the **Anthropic SDK** directly (author's subscription); no
+- **FR-L2** LLM brains call the **Google Gemini API** directly (via the `google-genai` SDK or `gemini` CLI); no
   custom rate-limiting or cost-tracking infrastructure is required for this project.
 - **FR-L3** The SDK call is isolated in a shared `LLMCallerMixin` — not duplicated across
   referee and player brains (DRY principle, OOP mixin per guidelines §4.2).
+
+Note: LLM backend changed from Anthropic to Google Gemini on 2026-05-28; see `docs/gemini_paid_tier` decision.
 
 ---
 
@@ -122,7 +124,7 @@ architecture scales from `localhost` to multiple machines without redesign. See 
 | ID | Requirement |
 |----|-------------|
 | NFR1 | **Reliability** — referee survives player crash/disconnect/timeout; graceful degradation |
-| NFR2 | **Security** — no secrets in source; Anthropic key from environment variable only; `.env-example` documents it |
+| NFR2 | **Security** — no secrets in source; `GOOGLE_API_KEY` from environment variable only; `.env-example` documents it |
 | NFR3 | **Configurability** — all operational values (host, port, timeouts, player count) from config files |
 | NFR4 | **Maintainability** — modular building blocks, single responsibility, ≤ 150 lines/file, no code duplication |
 | NFR5 | **Testability** — TDD, ≥ 85 % coverage, transport mocked in unit tests |
@@ -155,13 +157,13 @@ Portability (`uv`, no OS-specific assumptions).
   multi-host use later.
 - Exactly two players per match (configurable constant).
 - Turn-based game: referee mediates all state; players do not talk directly to each other.
-- Phase 2 uses the author's Anthropic subscription via the SDK — no production deployment,
+- Phase 2 uses the Google Gemini API (via the `google-genai` SDK or `gemini` CLI) — no production deployment,
   no cost-tracking infrastructure needed.
 
 ### 6.2 Dependencies
 - Python — managed exclusively via **`uv`**.
 - Standard-library `socket` for transport (no broker, no external messaging library).
-- `anthropic` Python SDK (Phase 2 only) — auth via `ANTHROPIC_API_KEY` environment variable.
+- `google-genai` Python SDK or `gemini` CLI (Phase 2 only) — auth via `GOOGLE_API_KEY` environment variable.
 
 ### 6.3 Constraints (from the guidelines)
 - SDK-layered architecture; all business logic through one SDK entry point.

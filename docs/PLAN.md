@@ -22,14 +22,14 @@ graph TD
     OP -->|uv run player| P2[Player B Process]
     P1 <-->|TCP · versioned JSON| REF
     P2 <-->|TCP · versioned JSON| REF
-    REF -.->|Phase 2 · Anthropic SDK · subscription| LLM[(Claude LLM)]
-    P1  -.->|Phase 2 · Anthropic SDK · subscription| LLM
-    P2  -.->|Phase 2 · Anthropic SDK · subscription| LLM
+    REF -.->|Phase 2 · Google Gemini API| LLM[(Gemini LLM)]
+    P1  -.->|Phase 2 · Google Gemini API| LLM
+    P2  -.->|Phase 2 · Google Gemini API| LLM
 ```
 
 Three separate OS processes. The **referee is the TCP server**; the two players are
 **TCP clients**. Players never talk directly to each other. In Phase 2 all three agents
-call the Anthropic SDK **directly** using the author's subscription — no custom gatekeeper
+call the Google Gemini API (via the `google-genai` SDK or `gemini` CLI) **directly** — no custom gatekeeper
 or rate-limiting layer (PRD §7, ADR-007).
 
 ---
@@ -74,7 +74,7 @@ graph TD
 - All business logic flows through **`ArenaSDK`**. Entry points contain no logic.
 - Transport is hidden behind the **`Channel`** interface (ADR-006); domain services never
   touch sockets directly.
-- The Anthropic SDK call lives in exactly one place: **`LLMCallerMixin`** (shared by
+- The Gemini API/SDK call lives in exactly one place: **`LLMCallerMixin`** (shared by
   referee and player LLM brains via mixin inheritance — no duplication, §4.2).
 
 ---
@@ -136,7 +136,7 @@ agent-arena/
 │           │   ├── framing.py           # length-prefix framing over byte stream
 │           │   ├── tcp_server.py        # bind/listen/accept + per-connection threads
 │           │   └── tcp_client.py        # connect/send/recv with retry
-│           ├── llm_caller.py            # LLMCallerMixin — wraps Anthropic SDK call
+│           ├── llm_caller.py            # LLMCallerMixin — wraps Gemini API/SDK call
 │           ├── config.py                # load + validate config files + version check
 │           ├── logging_setup.py         # structured logging from logging_config.json
 │           └── version.py               # VERSION = "1.00"
@@ -165,7 +165,7 @@ agent-arena/
 ├── README.md                            # MANDATORY (see §5 for required sections)
 ├── pyproject.toml                       # build, deps, ruff, coverage, console scripts
 ├── uv.lock
-├── .env-example                         # ANTHROPIC_API_KEY=<your-key>
+├── .env-example                         # GOOGLE_API_KEY=<your-key>
 └── .gitignore                           # must include: .env, *.key, *.pem,
                                          # credentials.json, __pycache__, .venv
 ```
@@ -235,10 +235,10 @@ Each block is a self-contained, single-responsibility unit (guidelines §16).
 - **Setup:** model name and system-prompt template (from config or caller).
 - **Input:** a human-turn prompt string.
 - **Output:** the model's response string.
-- **Note:** this mixin is the **only** place the `anthropic` SDK is imported. Both
+- **Note:** this mixin is the **only** place the `google-genai` SDK or `gemini` CLI is imported/called. Both
   `referee/brain/llm_brain.py` and `player/brain/llm_brain.py` inherit from it —
   zero duplication (guidelines §4.2 mixin rules).
-- **Auth:** reads `ANTHROPIC_API_KEY` from the environment; never from config files.
+- **Auth:** reads `GOOGLE_API_KEY` from the environment; never from config files.
 
 ---
 
@@ -327,13 +327,15 @@ sequenceDiagram
 
 ## 8. LLM Integration (Phase 2)
 
-All three agents use the Anthropic Python SDK directly — no custom gatekeeper or
+All three agents use the Google Gemini API (via the `google-genai` SDK or `gemini` CLI) directly — no custom gatekeeper or
 rate-limiting layer (this is a local dev/test project, not a deployment; PRD §7).
 
-- `LLMCallerMixin` wraps the single SDK import and call.
-- Auth: `ANTHROPIC_API_KEY` from the environment (documented in `.env-example`).
+- `LLMCallerMixin` wraps the single API/SDK import and call.
+- Auth: `GOOGLE_API_KEY` from the environment (documented in `.env-example`).
 - Model name comes from `config/setup.json` — never hardcoded.
 - No token-cost tracking, no request queuing, no retry beyond the SDK's default.
+
+Note: LLM backend changed from Anthropic to Google Gemini on 2026-05-28; see `docs/gemini_paid_tier` decision.
 
 ---
 
@@ -347,8 +349,8 @@ config/setup.json          host, port, player_count, move_timeout,
 
 config/logging_config.json log levels, handlers, output path
 
-.env                       ANTHROPIC_API_KEY=...   ← git-ignored
-.env-example               ANTHROPIC_API_KEY=<your-key>  ← committed
+.env                       GOOGLE_API_KEY=...   ← git-ignored
+.env-example               GOOGLE_API_KEY=<your-key>  ← committed
 
 src/.../shared/version.py  VERSION = "1.00"
 src/.../constants.py       immutable keys, enum-like defaults
