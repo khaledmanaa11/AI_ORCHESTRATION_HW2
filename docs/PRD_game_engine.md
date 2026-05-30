@@ -6,11 +6,11 @@ The Game Engine mechanism decouples game rules and states from the network orche
 ## 2. Input / Output (I/O)
 - **Interface**: `GameEngine` abstract base class.
 - **Input**:
-  - `validate_move(state, move, role)`: Returns boolean or raises detailed validation error.
-  - `apply_move(state, move, role)`: Returns the next game state.
-  - `check_terminal(state)`: Returns `(is_terminal: bool, winner: role_or_none)`.
+  - `validate_move(state, move)`: Returns `(legal: bool, reason: str | None)`. Note that role/turn enforcement (routing) lives in `_turn_runner.py`, not in the engine's `validate_move`.
+  - `apply_move(state, move, **kwargs)`: Returns the next game state. Note that role/turn enforcement lives in `_turn_runner.py`, not in the engine's `apply_move`.
+  - `is_terminal(state)`: Returns `bool`. Note that winner/verdict determination is delegated to the Referee Brain, rather than being returned directly by `is_terminal`.
   - `get_initial_state()`: Returns the start state.
-  - `get_legal_moves(state, role)`: Returns hints/list of legal actions.
+  - `get_legal_moves(state)`: Returns constraint/legal action descriptors.
 - **Outputs/States**: Must be JSON-serializable to match the protocol requirements.
 
 ## 3. Constraints
@@ -24,6 +24,6 @@ The Game Engine mechanism decouples game rules and states from the network orche
 
 ## 5. Success & Edge-Case Tests
 - **Success - Move Application**: Valid move applied, state transitions correctly, active player changes.
-- **Edge Case - Out-of-turn Move**: A player submits a move when it is not their turn. The validator rejects the move.
+- **Edge Case - Out-of-turn Move**: A player submits a move when it is not their turn. The referee (outside the game engine, specifically in `_turn_runner.py`) rejects the move or routes the turns.
 - **Edge Case - Invalid Move Content**: A player submits a move that is out-of-bounds or violates game rules. The validator rejects it, and referee requests a retry or enforces forfeit.
-- **Edge Case - Terminal State**: A move resulting in a win/draw is applied. `check_terminal` returns true, prompting the referee to send `GAME_OVER`.
+- **Edge Case - Terminal State**: A move resulting in a win/draw is applied. `is_terminal` returns true, prompting the referee to send `GAME_OVER`.
