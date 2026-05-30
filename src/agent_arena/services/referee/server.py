@@ -7,9 +7,16 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from agent_arena.constants import PROTOCOL_VERSION
 from agent_arena.services.game.debate_state import DebateState
 from agent_arena.services.protocol.codec import decode
-from agent_arena.services.protocol.message_types import MessageType
+from agent_arena.services.protocol.message_types import ErrorCode, MessageType
+from agent_arena.services.protocol.validation import (
+    ProtocolVersionError,
+    UnknownMessageTypeError,
+    ValidationError,
+    validate,
+)
 from agent_arena.services.referee._turn_runner import recv_timed
 from agent_arena.services.referee.brain.base import RefereeBrain
 from agent_arena.services.referee.brain.simple_brain import SimpleRefereeBrain
@@ -58,12 +65,12 @@ class RefereeServer:
                 with contextlib.suppress(Exception):
                     ch.close()
 
-    def _send_error(self, ch: Channel, message: str) -> None:
+    def _send_error(self, ch: Channel, message: str, code: str = ErrorCode.MALFORMED_MESSAGE) -> None:
         send_referee_message(
             ch,
             None,
             MessageType.ERROR,
-            {"code": "MALFORMED_MESSAGE", "message": message},
+            {"code": code, "message": message},
             1,
         )
 
@@ -75,8 +82,19 @@ class RefereeServer:
                 framed_ch.close()
                 return
             env = decode(raw)
+            try:
+                validate(env, PROTOCOL_VERSION)
+            except ProtocolVersionError:
+                self._send_error(framed_ch, "Protocol version mismatch", code=ErrorCode.VERSION_MISMATCH)
+                framed_ch.close()
+                return
+            except (UnknownMessageTypeError, ValidationError):
+                self._send_error(framed_ch, "Malformed message", code=ErrorCode.MALFORMED_MESSAGE)
+                framed_ch.close()
+                return
+
             if env.type != MessageType.REGISTER:
-                self._send_error(framed_ch, "Expected REGISTER")
+                self._send_error(framed_ch, "Expected REGISTER", code=ErrorCode.UNEXPECTED_MESSAGE)
                 framed_ch.close()
                 return
             player_id = env.sender

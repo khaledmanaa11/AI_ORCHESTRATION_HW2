@@ -1,6 +1,6 @@
 from agent_arena.services.protocol.codec import CodecError, decode, encode
 from agent_arena.services.protocol.envelope import Envelope
-from agent_arena.services.protocol.message_types import MessageType
+from agent_arena.services.protocol.message_types import ErrorCode, MessageType
 from agent_arena.services.protocol.payloads import (
     ErrorPayload,
     GameOverPayload,
@@ -21,6 +21,7 @@ from agent_arena.services.protocol.validation import (
 )
 
 __all__ = [
+    "ErrorCode",
     "MessageType",
     "Envelope",
     "encode",
