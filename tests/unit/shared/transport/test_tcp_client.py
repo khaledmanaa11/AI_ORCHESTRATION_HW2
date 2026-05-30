@@ -4,6 +4,7 @@ import threading
 
 import pytest
 
+from agent_arena.shared.transport import tcp_client as tcp_client_module
 from agent_arena.shared.transport.channel import Channel
 from agent_arena.shared.transport.tcp_client import ConnectionFailedError, TcpClient
 
@@ -43,6 +44,38 @@ def test_connect_exhausts_retries_and_raises():
     client = TcpClient(_HOST, port, connect_timeout=0.5, max_retries=1, backoff_base=0.01)
     with pytest.raises(ConnectionFailedError):
         client.connect()
+
+
+def test_connect_does_not_retry_non_retryable_oserror(monkeypatch):
+    attempts: list[tuple[str, int]] = []
+
+    class NonRetryableSocket:
+        def settimeout(self, _timeout):
+            pass
+
+        def connect(self, address):
+            attempts.append(address)
+            raise socket.gaierror("host not found")
+
+        def close(self):
+            pass
+
+    def fake_socket(_family, _kind):
+        return NonRetryableSocket()
+
+    monkeypatch.setattr(tcp_client_module.socket, "socket", fake_socket)
+    client = TcpClient(
+        "missing.example.invalid",
+        9999,
+        connect_timeout=0.5,
+        max_retries=3,
+        backoff_base=0.01,
+    )
+
+    with pytest.raises(ConnectionFailedError):
+        client.connect()
+
+    assert attempts == [("missing.example.invalid", 9999)]
 
 
 def test_data_flows_over_connection():

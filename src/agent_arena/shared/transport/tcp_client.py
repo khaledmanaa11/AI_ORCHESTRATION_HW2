@@ -37,7 +37,7 @@ class TcpClient:
             sock.settimeout(self._connect_timeout)
             try:
                 sock.connect((self._host, self._port))
-            except OSError as exc:
+            except (ConnectionRefusedError, TimeoutError) as exc:
                 sock.close()
                 if attempt >= self._max_retries:
                     break
@@ -48,6 +48,11 @@ class TcpClient:
                 )
                 time.sleep(wait)
                 continue
+            except OSError as exc:
+                sock.close()
+                raise ConnectionFailedError(
+                    f"failed to connect to {self._host}:{self._port}"
+                ) from exc
             sock.settimeout(None)
             self._sock = sock
             logger.info("Connected to %s:%d", self._host, self._port)
