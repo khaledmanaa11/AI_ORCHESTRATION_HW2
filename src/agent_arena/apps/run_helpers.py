@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import sys
 import time
+from collections.abc import Mapping
 from typing import TextIO
 
+from agent_arena.constants import FLAG_QUOTA_ABORTED, TERMINATED_QUOTA_ABORTED
 from agent_arena.services.game.debate_state import DebateState
 from agent_arena.services.referee.brain.llm_brain import LLMRefereeBrain
 from agent_arena.services.referee.brain.simple_brain import SimpleRefereeBrain
@@ -34,6 +36,26 @@ def wait_for_match(server: RefereeServer, poll_seconds: float = 0.2) -> DebateSt
 _DEFAULT_FLAGS = ("timeout", "retry_exhausted", "disconnect")
 
 
+def _format_api_value(value: object) -> str:
+    if value is None:
+        return "unknown"
+    if isinstance(value, float):
+        return f"{value:.2f}".rstrip("0").rstrip(".")
+    return str(value)
+
+
+def _rpd_used(api_state: Mapping[str, object]) -> object:
+    explicit = api_state.get("rpd_used")
+    if explicit is not None:
+        return explicit
+
+    limit = api_state.get("rpd_limit", api_state.get("rpd"))
+    remaining = api_state.get("rpd_remaining")
+    if isinstance(limit, (int, float)) and isinstance(remaining, (int, float)):
+        return max(0, limit - remaining)
+    return None
+
+
 def _default_summary(state: DebateState) -> dict[str, int]:
     """Count per-side defaulted turns (timeout / retry_exhausted / disconnect)."""
     counts: dict[str, int] = {"PRO": 0, "CON": 0}
@@ -41,6 +63,49 @@ def _default_summary(state: DebateState) -> dict[str, int]:
         if turn.referee_flag in _DEFAULT_FLAGS:
             counts[turn.side] = counts.get(turn.side, 0) + 1
     return counts
+
+
+def _has_quota_aborted(state: DebateState, verdict: dict) -> bool:
+    if verdict.get("terminated_reason") == TERMINATED_QUOTA_ABORTED:
+        return True
+    return any(turn.referee_flag == FLAG_QUOTA_ABORTED for turn in state.transcript)
+
+
+def _print_quota_aborted_banner(out: TextIO) -> None:
+    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", file=out)
+    print(
+        "WARNING: this match was terminated by API capacity exhaustion - "
+        "not a real forfeit",
+        file=out,
+    )
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", file=out)
+
+
+def _print_api_gatekeeper(api_state: Mapping[str, object], out: TextIO) -> None:
+    print("\n=== API Gatekeeper ===", file=out)
+    print(
+        "RPD used/remaining: "
+        f"{_format_api_value(_rpd_used(api_state))} / "
+        f"{_format_api_value(api_state.get('rpd_remaining'))}",
+        file=out,
+    )
+    print(f"RPD resets at: {_format_api_value(api_state.get('rpd_resets_at'))}", file=out)
+    print(f"RPM tokens: {_format_api_value(api_state.get('rpm_tokens'))}", file=out)
+    print(
+        "In flight: "
+        f"{_format_api_value(api_state.get('in_flight'))} / "
+        f"{_format_api_value(api_state.get('max_concurrency'))}",
+        file=out,
+    )
+    print(f"Breaker state: {_format_api_value(api_state.get('breaker_state'))}", file=out)
+    print(
+        "Consecutive failures: "
+        f"{_format_api_value(api_state.get('consecutive_failures'))}",
+        file=out,
+    )
+    opened_at = api_state.get("breaker_opened_at")
+    if opened_at:
+        print(f"Breaker opened at: {opened_at}", file=out)
 
 
 def print_transcript(state: DebateState | None, stream: TextIO | None = None) -> None:
@@ -68,6 +133,8 @@ def print_transcript(state: DebateState | None, stream: TextIO | None = None) ->
     total_defaults = defaults["PRO"] + defaults["CON"]
     verdict = state.verdict or {}
     winner = verdict.get("winner", "unknown")
+    if _has_quota_aborted(state, verdict):
+        _print_quota_aborted_banner(out)
 
     print("\n=== Verdict ===", file=out)
     print(f"Winner: {winner}", file=out)
@@ -78,6 +145,10 @@ def print_transcript(state: DebateState | None, stream: TextIO | None = None) ->
         print(f"Rationale: {rationale}", file=out)
     if "terminated_reason" in verdict:
         print(f"Terminated: {verdict['terminated_reason']}", file=out)
+
+    api_state = verdict.get("api_state")
+    if isinstance(api_state, Mapping):
+        _print_api_gatekeeper(api_state, out)
 
     if total_defaults > 0:
         print(
