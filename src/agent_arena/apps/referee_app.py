@@ -7,12 +7,12 @@ import logging
 from agent_arena.apps.run_helpers import (
     build_referee_brain,
     print_transcript,
-    wait_for_match,
 )
 from agent_arena.services.referee.server import RefereeServer
 from agent_arena.shared.api_gatekeeper import APIGatekeeper
 from agent_arena.shared.config import load_setup_config
 from agent_arena.shared.llm_client import LLMClient
+from agent_arena.shared.shutdown import ShutdownCoordinator
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,15 +39,21 @@ def main() -> None:
     brain.api_gatekeeper = gatekeeper
     if args.brain == "llm":
         brain._client = LLMClient(provider=config.llm.provider, gatekeeper=gatekeeper)
-    server = RefereeServer(config, brain=brain)
+    coordinator = ShutdownCoordinator()
+    coordinator.install_signal_handlers()
+    server = RefereeServer(config, brain=brain, coordinator=coordinator)
 
     try:
         server.start()
         print(f"Referee listening on {config.network.host}:{server.server.port}")
         print("Waiting for two players...")
-        state = wait_for_match(server)
+        coordinator.wait()
+        if server.game_thread is not None:
+            server.game_thread.join()
+        if server.exception is not None:
+            raise server.exception
         if args.show_transcript:
-            print_transcript(state)
+            print_transcript(server.final_state)
     finally:
         server.stop()
 

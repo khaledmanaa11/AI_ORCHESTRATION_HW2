@@ -28,8 +28,11 @@ from agent_arena.services.referee.server_helpers import (
     send_referee_message,
 )
 from agent_arena.shared.config import SetupConfig
+from agent_arena.shared.heartbeat import HeartbeatSender
+from agent_arena.shared.shutdown import ShutdownCoordinator
 from agent_arena.shared.transport.channel import Channel, FramedChannel
 from agent_arena.shared.transport.tcp_server import TcpServer
+from agent_arena.shared.watchdog import WatchdogThread
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +40,15 @@ logger = logging.getLogger(__name__)
 class RefereeServer:
     """Listens for connections, registers players, and runs the game loop (T4.9)."""
 
-    def __init__(self, config: SetupConfig, brain: RefereeBrain | None = None) -> None:
+    def __init__(
+        self,
+        config: SetupConfig,
+        brain: RefereeBrain | None = None,
+        coordinator: ShutdownCoordinator | None = None,
+    ) -> None:
         self.config = config
         self.brain = brain or SimpleRefereeBrain()
+        self.coordinator = coordinator or ShutdownCoordinator()
         self.server = TcpServer(
             config.network.host,
             config.network.port,
@@ -53,18 +62,58 @@ class RefereeServer:
         self.final_state: DebateState | None = None
         self.exception: Exception | None = None
         self.match_id: str | None = None
+        self.watchdog = WatchdogThread(
+            timeout_seconds=config.network.read_timeout_seconds,
+            on_timeout=self._on_watchdog_timeout,
+        )
+        self.heartbeat_senders: dict[str, HeartbeatSender] = {}
+        self._heartbeat_seq = 0
+        self.coordinator.register_callback(self.stop)
 
     def start(self) -> None:
+        self.watchdog.start()
         self.server.start()
 
     def stop(self) -> None:
         import contextlib
 
         self.server.stop()
+        self.watchdog.stop()
+        for sender in self.heartbeat_senders.values():
+            sender.stop()
         with self.lock:
-            for ch in self.registered_players.values():
-                with contextlib.suppress(Exception):
-                    ch.close()
+            channels = list(self.registered_players.values())
+        for ch in channels:
+            with contextlib.suppress(Exception):
+                ch.close()
+
+    def _next_heartbeat_seq(self) -> int:
+        with self.lock:
+            self._heartbeat_seq += 1
+            return self._heartbeat_seq
+
+    def _on_watchdog_timeout(self, player_id: str) -> None:
+        self.coordinator.request_shutdown(f"watchdog:player_timeout:{player_id}")
+
+    def _start_heartbeat_sender(self, player_id: str, ch: Channel) -> None:
+        def _send() -> None:
+            if self.match_id is None:
+                return
+            send_referee_message(
+                ch,
+                self.match_id,
+                MessageType.HEARTBEAT,
+                {},
+                self._next_heartbeat_seq(),
+            )
+
+        sender = HeartbeatSender(
+            interval_seconds=self.config.game.heartbeat_interval_seconds,
+            send_fn=_send,
+            shutdown_event=self.coordinator._event,
+        )
+        self.heartbeat_senders[player_id] = sender
+        sender.start()
 
     def _send_error(self, ch: Channel, message: str, code: str = ErrorCode.MALFORMED_MESSAGE) -> None:
         send_referee_message(
@@ -111,6 +160,8 @@ class RefereeServer:
                     framed_ch.close()
                     return
                 self.registered_players[player_id] = framed_ch
+                self.watchdog.register(player_id)
+                self._start_heartbeat_sender(player_id, framed_ch)
                 if len(self.registered_players) == self.config.network.player_count:
                     self.game_thread = threading.Thread(target=self.run_game, daemon=True)
                     self.game_thread.start()
@@ -169,3 +220,5 @@ class RefereeServer:
         except Exception as e:
             self.exception = e
             logger.exception("Error in run_game")
+        finally:
+            self.coordinator.request_shutdown("game_over")

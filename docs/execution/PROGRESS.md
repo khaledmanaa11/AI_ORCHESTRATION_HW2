@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: C1**
+**NEXT: C2**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -29,7 +29,7 @@
 - [x] B5 — Unit tests for `APIGatekeeper` (FakeClock, all behaviors)
 
 ## Part C — Fault-tolerance wiring → `PART_C_fault_tolerance.md`
-- [ ] C1 — Wire ShutdownCoordinator + WatchdogThread + HeartbeatSender into referee
+- [x] C1 — Wire ShutdownCoordinator + WatchdogThread + HeartbeatSender into referee
 - [ ] C2 — Call `watchdog.heartbeat(player_id)` on every recv in `_turn_runner`
 - [ ] C3 — Wire fault-tolerance into player client/agent; GAME_OVER → request_shutdown
 - [ ] C4 — Fault-tolerance quality gate: ruff + coverage ≥85% on `shared/`, record in devlog
