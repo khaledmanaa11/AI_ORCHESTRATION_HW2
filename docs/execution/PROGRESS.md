@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: D2**
+**NEXT: E1**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -36,7 +36,7 @@
 
 ## Part D — Player generation params → `PART_D_player_params.md`
 - [x] D1 — Thread temperature/top_p/seed from `gen_params` into the LLM call
-- [ ] D2 — Gate-guard test: no player brain module imports `google.generativeai`
+- [x] D2 — Gate-guard test: no player brain module imports `google.generativeai`
 
 ## Part E — Referee sweep & analysis → `PART_E_referee_sweep.md`
 - [ ] E1 — `first_speaker` flip in sweep_runner mirror pairs
