@@ -37,13 +37,19 @@ class LLMPlayerBrain(PlayerBrain):
     def generate(self, context: PlayerContext) -> PlayerDecision:
         """Generate a move decision using LLM call, parser, and selector."""
         # 1. Build prompt
-        prompt_str, _ = build_player_prompt(context, self._config)
+        prompt_str, gen_params = build_player_prompt(context, self._config)
 
         # 2. Get LLM model name from config
         model_name = _get_val(self._config, ["llm", "model_name"], "gemini-2.5-flash-lite")
 
-        # 3. Make exactly one LLM call
-        raw_output = self._client.generate_text(prompt_str, model_name)
+        # 3. Make exactly one LLM call, forwarding sampling params from the prompt builder
+        raw_output = self._client.generate_text(
+            prompt_str,
+            model_name,
+            temperature=gen_params.get("temperature"),
+            top_p=gen_params.get("top_p"),
+            seed=gen_params.get("seed"),
+        )
 
         # 4. Parse the output
         parsed_turn = parse_output(raw_output)

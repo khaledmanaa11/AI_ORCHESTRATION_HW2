@@ -36,10 +36,19 @@ class FakeLLMClient:
 
     def __init__(self, response_text: str) -> None:
         self.calls: list[tuple[str, str]] = []
+        self.gen_kwargs: list[dict] = []
         self.response_text = response_text
 
-    def generate_text(self, prompt: str, model_name: str) -> str:
+    def generate_text(
+        self,
+        prompt: str,
+        model_name: str,
+        temperature: float | None = None,
+        top_p: float | None = None,
+        seed: int | None = None,
+    ) -> str:
         self.calls.append((prompt, model_name))
+        self.gen_kwargs.append({"temperature": temperature, "top_p": top_p, "seed": seed})
         return self.response_text
 
 
@@ -108,7 +117,13 @@ def test_llm_player_brain_one_call_and_trace_shape() -> None:
     assert list(decision.move.keys()) == ["text"]
     assert decision.move["text"] == "Draft 2: therefore we must conclude logic is clear."
 
-    # 3. Check trace shape (FR-PC1 fields)
+    # 3. Check that gen_params from build_player_prompt were forwarded to the client
+    gk = client.gen_kwargs[0]
+    assert gk["temperature"] == 0.8   # from config debate.player.temperature
+    assert gk["top_p"] == 0.95        # from config debate.player.top_p
+    assert gk["seed"] == 12345        # from context.seed
+
+    # 4. Check trace shape (FR-PC1 fields)
     trace = decision.trace
     assert trace["match_id"] == "test-match-123"
     assert trace["seed"] == 12345

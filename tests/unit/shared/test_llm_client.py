@@ -1,7 +1,7 @@
 import subprocess
 import types
 
-import pytest
+from google.genai import types as genai_types
 
 from agent_arena.shared import api_gatekeeper
 from agent_arena.shared.api_gatekeeper import APIGatekeeper, get_default_gatekeeper
@@ -40,17 +40,17 @@ def test_direct_clients_share_default_gatekeeper(monkeypatch):
     monkeypatch.setattr(
         api_gatekeeper,
         "load_setup_config",
-        lambda path: fake_gatekeeper_cfg,
+        lambda _: fake_gatekeeper_cfg,
     )
     monkeypatch.setenv("GOOGLE_API_KEY", "fake-key")
-    monkeypatch.setattr("agent_arena.shared.llm_client.load_dotenv", lambda *args, **kwargs: None)
+    monkeypatch.setattr("agent_arena.shared.llm_client.load_dotenv", lambda *_a, **_kw: None)
     monkeypatch.setattr(
         "agent_arena.shared.llm_client.genai.Client",
-        lambda api_key: types.SimpleNamespace(models=types.SimpleNamespace(generate_content=lambda *args, **kwargs: None)),
+        lambda *_a, **_kw: types.SimpleNamespace(models=types.SimpleNamespace(generate_content=lambda *_a, **_kw: None)),
     )
     monkeypatch.setattr(
         "agent_arena.shared.llm_client.shutil.which",
-        lambda binary: "/usr/bin/gemini",
+        lambda _: "/usr/bin/gemini",
     )
 
     google_client = GoogleGenAIClient()
@@ -71,11 +71,11 @@ def test_gemini_retry_backoff_releases_gatekeeper_slot(monkeypatch):
         acquire_timeout_seconds=1.0,
     )
 
-    monkeypatch.setattr("agent_arena.shared.llm_client.load_dotenv", lambda *args, **kwargs: None)
+    monkeypatch.setattr("agent_arena.shared.llm_client.load_dotenv", lambda *_a, **_kw: None)
     monkeypatch.setenv("GEMINI_CLI_BIN", "gemini")
     monkeypatch.setattr(
         "agent_arena.shared.llm_client.shutil.which",
-        lambda binary: "/usr/bin/gemini",
+        lambda _: "/usr/bin/gemini",
     )
 
     client = GeminiCLIClient(gatekeeper=gatekeeper)
@@ -102,7 +102,7 @@ def test_gemini_retry_backoff_releases_gatekeeper_slot(monkeypatch):
         stderr="",
     )
 
-    def fake_run(*args, **kwargs):
+    def fake_run(*_a, **_kw):
         return first_result if not sleep_called else second_result
 
     monkeypatch.setattr("agent_arena.shared.llm_client.subprocess.run", fake_run)
@@ -111,3 +111,37 @@ def test_gemini_retry_backoff_releases_gatekeeper_slot(monkeypatch):
 
     assert response == "ok"
     assert len(sleep_called) == 1
+
+
+def test_google_genai_generate_text_forwards_sampling_params(monkeypatch):
+    """generate_text must pass temperature/top_p/seed kwargs into GenerateContentConfig."""
+    monkeypatch.setattr("agent_arena.shared.llm_client.load_dotenv", lambda *_a, **_kw: None)
+    monkeypatch.setenv("GOOGLE_API_KEY", "fake-key")
+    monkeypatch.setattr(
+        "agent_arena.shared.llm_client.genai.Client",
+        lambda *_a, **_kw: types.SimpleNamespace(
+            models=types.SimpleNamespace(
+                generate_content=lambda *_a, **_kw: None
+            )
+        ),
+    )
+
+    client = GoogleGenAIClient()
+
+    captured: list[genai_types.GenerateContentConfig] = []
+    fake_result = types.SimpleNamespace(text="hello")
+
+    def fake_generate(_prompt, _model_name, config):
+        captured.append(config)
+        return fake_result
+
+    monkeypatch.setattr(client, "_generate", fake_generate)
+
+    result = client.generate_text("p", "m", temperature=0.5, top_p=0.85, seed=99)
+
+    assert result == "hello"
+    assert len(captured) == 1
+    cfg = captured[0]
+    assert cfg.temperature == 0.5
+    assert cfg.top_p == 0.85
+    assert cfg.seed == 99

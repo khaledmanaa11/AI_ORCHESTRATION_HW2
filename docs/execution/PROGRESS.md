@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: D1**
+**NEXT: D2**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -35,7 +35,7 @@
 - [x] C4 — Fault-tolerance quality gate: ruff + coverage ≥85% on `shared/`, record in devlog
 
 ## Part D — Player generation params → `PART_D_player_params.md`
-- [ ] D1 — Thread temperature/top_p/seed from `gen_params` into the LLM call
+- [x] D1 — Thread temperature/top_p/seed from `gen_params` into the LLM call
 - [ ] D2 — Gate-guard test: no player brain module imports `google.generativeai`
 
 ## Part E — Referee sweep & analysis → `PART_E_referee_sweep.md`

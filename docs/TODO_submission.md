@@ -54,10 +54,10 @@ Do not start S2/S3 with a broken gatekeeper.
 
 ## S2 — `[referee tell]` side-label bug fix
 
-- [ ] **S2.1** Reproduce the label-swap with a focused unit test that drives the turn-summary path with a known PRO/CON sequence. *DoD:* test fails on `master`.
-- [ ] **S2.2** Locate the swap — likely in the referee's turn-summary prompt builder or post-processor (per `CURRENT_STATE.md` §Known Minor Bug). *DoD:* root cause named in commit message.
-- [ ] **S2.3** Apply the minimal fix. No incidental refactors. *DoD:* test in S2.1 passes; full pytest still green.
-- [ ] **S2.4** Single commit: `fix(referee): correct [referee tell] side label`. *DoD:* commit landed on `master`.
+- [x] **S2.1** Reproduce the label-swap with a focused unit test that drives the turn-summary path with a known PRO/CON sequence. *DoD:* test fails on `master`.
+- [x] **S2.2** Locate the swap — likely in the referee's turn-summary prompt builder or post-processor (per `CURRENT_STATE.md` §Known Minor Bug). *DoD:* root cause named in commit message.
+- [x] **S2.3** Apply the minimal fix. No incidental refactors. *DoD:* test in S2.1 passes; full pytest still green.
+- [x] **S2.4** Single commit: `fix(referee): correct [referee tell] side label`. *DoD:* commit landed on `master`.
 
 ---
 

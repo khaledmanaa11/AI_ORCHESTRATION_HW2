@@ -8,8 +8,6 @@ import subprocess
 import time
 from typing import TypeVar
 
-logger = logging.getLogger(__name__)
-
 from dotenv import load_dotenv
 from google import genai
 from google.genai import errors as genai_errors
@@ -17,6 +15,8 @@ from google.genai import types
 from pydantic import BaseModel
 
 from agent_arena.shared.api_gatekeeper import APIGatekeeper, get_default_gatekeeper
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -55,10 +55,7 @@ def _backoff_seconds(exc: Exception, attempt: int) -> float:
     syncing their retry schedules and re-colliding on every wake-up.
     """
     match = _RETRY_DELAY_RE.search(str(exc))
-    if match:
-        base = float(match.group(1)) + 1.0
-    else:
-        base = 2.0 ** attempt
+    base = float(match.group(1)) + 1.0 if match else 2.0 ** attempt
     jitter = base * random.uniform(-0.25, 0.25)
     return min(max(base + jitter, 1.0), _MAX_BACKOFF_SECONDS)
 
@@ -115,8 +112,19 @@ class GoogleGenAIClient:
             raise LLMError(f"Failed to parse JSON response: {str(e)}") from e
         return schema.model_validate(data)
 
-    def generate_text(self, prompt: str, model_name: str) -> str:
-        config = types.GenerateContentConfig(temperature=_get_temperature())
+    def generate_text(
+        self,
+        prompt: str,
+        model_name: str,
+        temperature: float | None = None,
+        top_p: float | None = None,
+        seed: int | None = None,
+    ) -> str:
+        config = types.GenerateContentConfig(
+            temperature=temperature if temperature is not None else _get_temperature(),
+            top_p=top_p,
+            seed=seed,
+        )
         result = self._generate(prompt, model_name, config)
         return result.text or ""
 
@@ -202,7 +210,14 @@ class GeminiCLIClient:
             raise LLMError(f"Failed to parse JSON from gemini CLI: {str(e)}; raw={raw!r}") from e
         return schema.model_validate(data)
 
-    def generate_text(self, prompt: str, model_name: str) -> str:
+    def generate_text(
+        self,
+        prompt: str,
+        model_name: str,
+        temperature: float | None = None,  # noqa: ARG002 — CLI backend ignores sampling params
+        top_p: float | None = None,  # noqa: ARG002
+        seed: int | None = None,  # noqa: ARG002
+    ) -> str:
         return self._run(prompt, model_name).strip()
 
 
@@ -223,13 +238,13 @@ class LLMClient:
             provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
         else:
             provider = provider.strip().lower()
-        
+
         if not provider:
             raise LLMError(
                 "LLM provider not specified. Pass provider='google'|'gemini-cli' explicitly "
                 "or set LLM_PROVIDER environment variable."
             )
-        
+
         if provider in ("google", "google-genai", "ai-studio"):
             return GoogleGenAIClient(gatekeeper=gatekeeper)
         if provider in ("gemini-cli", "cli"):

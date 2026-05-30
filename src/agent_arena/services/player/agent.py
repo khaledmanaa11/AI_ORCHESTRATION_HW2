@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from datetime import datetime, timezone
 from typing import Any
 
@@ -11,7 +12,9 @@ from agent_arena.services.protocol.codec import decode, encode
 from agent_arena.services.protocol.envelope import Envelope
 from agent_arena.services.protocol.message_types import MessageType
 from agent_arena.shared.api_gatekeeper import GatekeeperError
+from agent_arena.shared.shutdown import ShutdownCoordinator
 from agent_arena.shared.transport.channel import Channel
+from agent_arena.shared.watchdog import WatchdogThread
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +38,15 @@ class PlayerAgent:
         seed: int,
         config: Any = None,
         brain: Any = None,
+        coordinator: ShutdownCoordinator | None = None,
+        watchdog: WatchdogThread | None = None,
     ) -> None:
         self.player_id, self.channel, self.seed = player_id, channel, seed
         self.match_id, self.role, self.game_config, self.brain = None, None, None, brain
         self.game_over, self.seq = False, 0
+        self.coordinator = coordinator
+        self.watchdog = watchdog
+        self._send_lock = threading.Lock()
         self.scratchpad: list[Any] = []
         self.trace_buffer: list[dict[str, Any]] = []
         self.config = config
@@ -50,28 +58,40 @@ class PlayerAgent:
                 pass
 
     def _send(self, t: MessageType, payload: dict[str, Any]) -> None:
-        self.seq += 1
-        env = Envelope(
-            protocol_version=PROTOCOL_VERSION,
-            type=t,
-            match_id=self.match_id,
-            sender=self.player_id,
-            seq=self.seq,
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            payload=payload,
-        )
-        self.channel.send(encode(env))
+        with self._send_lock:
+            self.seq += 1
+            env = Envelope(
+                protocol_version=PROTOCOL_VERSION,
+                type=t,
+                match_id=self.match_id,
+                sender=self.player_id,
+                seq=self.seq,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                payload=payload,
+            )
+            self.channel.send(encode(env))
+
+    def _request_shutdown(self, reason: str) -> None:
+        if self.coordinator is not None:
+            self.coordinator.request_shutdown(reason)
+
+    def _is_shutdown(self) -> bool:
+        return self.coordinator is not None and self.coordinator.is_shutdown()
 
     def run(self) -> None:
         self._send(MessageType.REGISTER, {})
-        while not self.game_over:
+        while not self.game_over and not self._is_shutdown():
             try:
                 raw = self.channel.recv()
                 if not raw:
+                    self._request_shutdown("connection_closed")
                     break
+                if self.watchdog is not None:
+                    self.watchdog.heartbeat("referee")
                 self.handle_message(decode(raw))
             except Exception as e:
                 logger.error("Player agent %s exception: %s", self.player_id, e)
+                self._request_shutdown("player_exception")
                 break
 
     def handle_message(self, env: Envelope) -> None:
@@ -128,6 +148,7 @@ class PlayerAgent:
                             {"move": {"text": ""}, "flag": FLAG_QUOTA_ABORTED},
                         )
                         self.game_over = True
+                        self._request_shutdown("quota_aborted")
                         return
                     move, trace = dec.move, dec.trace
                     if trace:
@@ -142,6 +163,8 @@ class PlayerAgent:
             self._send(MessageType.MOVE_SUBMIT, {"move": move})
         elif t == MessageType.ERROR:
             logger.error("Player %s received ERROR: %s", self.player_id, payload)
+            self.game_over = True
+            self._request_shutdown("error")
         elif t == MessageType.GAME_OVER:
             self.game_over = True
             if self.trace_buffer:
@@ -150,3 +173,4 @@ class PlayerAgent:
                 rdir = _get_val(self.config, ["debate", "match", "results_dir"], "results")
                 from agent_arena.services.player.brain.capture import dump
                 dump(self.trace_buffer, rid, rdir, self.match_id or "unknown", self.role or "unknown", pc)
+            self._request_shutdown("game_over")
