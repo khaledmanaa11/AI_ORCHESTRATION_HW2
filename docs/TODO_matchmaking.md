@@ -52,8 +52,8 @@
 ## Module D — Edge-Case Recovery
 
 ### D1 — Pre-registration Disconnect Recovery
-- [ ] **D1.1** Implement timeout and removal logic to handle the pre-registration disconnect of a player (i.e. Player A registers but disconnects before Player B connects) without hanging or shutting down the server.
-  - *Status:* Open (Not started)
+- [x] **D1.1** Implement timeout and removal logic to handle the pre-registration disconnect of a player (i.e. Player A registers but disconnects before Player B connects) without hanging or shutting down the server.
+  - *Status:* ✅ Done. Two mechanisms combined: (1) `recv_timed(framed_ch, config.network.read_timeout_seconds)` at `server.py:134` closes the connection if the registration message never arrives; (2) `WatchdogThread` started at server init (`server.py:65–74`) with `_on_watchdog_timeout → coordinator.request_shutdown(…)` handles a registered player going silent before the match starts — heartbeat is fed on every recv (`server.py:163`). Server never hangs. Commits `fcc3e35`, `bd294ec`.
 
 ---
 

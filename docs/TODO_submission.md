@@ -63,9 +63,9 @@ Do not start S2/S3 with a broken gatekeeper.
 
 ## S3 — Module J sweep (sweep_001)
 
-- [ ] **S3.1** Confirm `data/evidence_pack_primary.json` matches the version used in Run 4 (same hash, same DOC-ID list). *DoD:* hash recorded in `sweep_001/summary.json`.
-- [ ] **S3.2** Launch the sweep with target 250 matches. *DoD:* sweep process running, results streaming into `results/sweep_001/`.
-- [ ] **S3.3** Monitor for: GCP budget alert email, gatekeeper exhaustion, abnormal forfeit rate. *DoD:* operator stays available for the duration.
+- [x] **S3.1** Confirm `data/evidence_pack_primary.json` matches the version used in Run 4 (same hash, same DOC-ID list). *DoD:* hash recorded in `sweep_001/summary.json`. ✅ SHA256 `bade1451…` in `results/sweep_001/summary.json`.
+- [~] **S3.2** Launch the sweep with target 250 matches. *DoD:* sweep process running, results streaming into `results/sweep_001/`. [~] **IN PROGRESS** — sweep launched 2026-05-30T20:14:36Z, `k=42` (252 total matches), 47 completed as of last check, breaker CLOSED, 0 quota_aborted.
+- [~] **S3.3** Monitor for: GCP budget alert email, gatekeeper exhaustion, abnormal forfeit rate. *DoD:* operator stays available for the duration. [~] **IN PROGRESS** — user monitoring live.
 - [ ] **S3.4** On clean completion, verify `summary.json` matches PRD §5.2 FR-SW-5 schema. *DoD:* schema validated; fields populated.
 - [ ] **S3.5** If sweep halted early (FR-SW-4), record the cause in `summary.json` and decide whether to resume into `sweep_002/` or proceed with the partial sweep (≥ 250 matches still required for S-AC2). *DoD:* decision documented in the run's devlog.
 
@@ -85,7 +85,7 @@ Do not start S2/S3 with a broken gatekeeper.
 
 ## S5 — `docs/PROMPTS.md` log
 
-- [ ] **S5.1** Create `docs/PROMPTS.md` with header and the entry template from PRD §5.6 FR-PL-3. *DoD:* file exists.
+- [x] **S5.1** Create `docs/PROMPTS.md` with header and the entry template from PRD §5.6 FR-PL-3. *DoD:* file exists. ✅ `docs/PROMPTS.md` exists with Entry 001 and template.
 - [ ] **S5.2** Write the referee judge prompt entry (current prompt, observed behavior, lessons). *DoD:* entry has all six fields.
 - [ ] **S5.3** Write the PRO player brain prompt entry. *DoD:* entry has all six fields.
 - [ ] **S5.4** Write the CON player brain prompt entry. *DoD:* entry has all six fields.

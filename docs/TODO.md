@@ -140,14 +140,18 @@
       modes, flags, typical workflow), examples & screenshots, configuration guide
       (every `setup.json` field explained), contribution guidelines (code style, PR
       process), license & credits. — *DoD:* README passes the §2.1 checklist.
+      ⏳ Tracked as **H4** in `docs/execution/PROGRESS.md`. Pending H1 sweep completion.
 - [ ] **TC.6** Maintain `docs/PROMPTS.md` (prompt-engineering log): add an entry for each
       significant LLM interaction during development. — *DoD:* file non-empty; entries
       include context, prompt, output, and lessons learned.
+      ⏳ Tracked as **H3** in `docs/execution/PROGRESS.md`. `docs/PROMPTS.md` exists with 1 real entry; needs ≥3.
 - [ ] **TC.7** Document edge cases, architecture diagrams, and match logs in `results/`
       and `assets/`. — *DoD:* at least one annotated match log and one architecture diagram.
+      ⏳ Tracked as **H5** in `docs/execution/PROGRESS.md`. `assets/` empty; sweep_001 logs accumulating.
 - [ ] **TC.8** Create a match-analysis notebook in `notebooks/` once integration is
       complete. — *DoD:* notebook runs end-to-end; documents at least one analysis
       (e.g. move distribution, match length histogram).
+      ⏳ Tracked as **H2** in `docs/execution/PROGRESS.md`. `notebooks/analysis.ipynb` exists (stub, no saved outputs); rewrite pending sweep_001 completion.
 
 ---
 

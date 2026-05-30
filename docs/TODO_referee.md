@@ -258,12 +258,10 @@
   - *DoD:* total per-turn wall-clock ≤ `move_timeout` regardless of attempts (FR-FT1, 8.1).
 - [x] **RE5.2** On expiry: append a penalized empty `TurnRecord` (`flag="timeout"`, floor scores), advance, continue — never forfeit.
   - *DoD:* timed-out turn yields a scored-zero turn, match continues.
-- [ ] **RE5.3** Use the existing `WatchdogThread`/`HeartbeatSender` for liveness, decoupled from `move_timeout`; raising `move_timeout` must not trip a disconnect.
-  - *DoD:* a slow-but-beating peer is not disconnected (FR-FT2/FT3, 8.2).
-  - **NOTE:** `recv_timed` handles the move timeout; WatchdogThread integration deferred to the TCP server wiring (Module F/H).
-- [ ] **RE5.4** Discriminator: beats flowing + no move → penalized skip (keep data); beats stopped → disconnect path (RE6).
-  - *DoD:* the two paths are distinguished by heartbeat state (8.2).
-  - **NOTE:** deferred to server wiring (Module F/H); in-memory tests use `ConnectionClosedError` directly.
+- [x] **RE5.3** Use the existing `WatchdogThread`/`HeartbeatSender` for liveness, decoupled from `move_timeout`; raising `move_timeout` must not trip a disconnect.
+  - *DoD:* a slow-but-beating peer is not disconnected (FR-FT2/FT3, 8.2). ✅ Wired in `server.py`: `WatchdogThread` started at `__init__`, `HeartbeatSender` per player started in `_start_heartbeat_sender`; `watchdog.heartbeat` called on every recv via `framed_ch._arena_watchdog`. Move timeout and watchdog are fully decoupled. Commit `fcc3e35`/`bd294ec`.
+- [x] **RE5.4** Discriminator: beats flowing + no move → penalized skip (keep data); beats stopped → disconnect path (RE6).
+  - *DoD:* ✅ `_on_watchdog_timeout` → `coordinator.request_shutdown("watchdog:player_timeout:…")` handles "beats stopped"; `recv_timed` timeout → penalized `flag="timeout"` TurnRecord handles "beats flowing + no move". The two paths are distinct. Commit `fcc3e35`.
 
 ### E6 — Disconnect & garbage (FR-FT4, FR-FT5)
 - [x] **RE6.1** On `ConnectionClosedError` after GAME_START: terminate with a forced verdict on the partial transcript; tag `terminated_reason="disconnect"`.
@@ -444,8 +442,8 @@
   - *DoD:* report ≥ 85 % (TC.1, R-AC11). ✅ 96% after Module E.
 - [x] **RK.4** No hardcoded host/port/timeout/weight/cap in source — all from config.
   - *DoD:* grep finds no operational literals (TC.4, AC8). ✅ Verified for Modules A–E.
-- [ ] **RK.5** **AC9 guard:** after the debate lands, `git diff` on `services/protocol/` is empty and `PROTOCOL_VERSION == "1.00"`.
-  - *DoD:* zero protocol diff confirmed (R-AC9, 7.a) — assert in CI. ⏳ Verify at Module H.
+- [x] **RK.5** **AC9 guard:** after the debate lands, `git diff` on `services/protocol/` is empty and `PROTOCOL_VERSION == "1.00"`.
+  - *DoD:* ✅ `tests/unit/services/protocol/test_protocol_frozen.py` asserts `PROTOCOL_VERSION == "1.00"` and locks the full `MessageType` + `ErrorCode` member sets. Commit `0fd188b`.
 
 ---
 
