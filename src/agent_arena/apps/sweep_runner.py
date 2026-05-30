@@ -56,7 +56,7 @@ def run_single_match(
     cfg = copy.deepcopy(config)
     cfg.network.port = 0
     cfg.network.connect_timeout_seconds = 1.0
-    cfg.network.read_timeout_seconds = 2.0
+    cfg.network.read_timeout_seconds = 2.0 if player_brain_choice == "seeded" else 120.0
     cfg.game.move_timeout_seconds = move_timeout_seconds or (
         2.0 if player_brain_choice == "seeded" else max(cfg.game.move_timeout_seconds, 60.0)
     )
