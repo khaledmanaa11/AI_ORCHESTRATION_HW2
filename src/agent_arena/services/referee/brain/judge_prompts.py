@@ -72,6 +72,17 @@ def build_turn_prompt(
             "Evaluate only the intrinsic quality of the text on the four criteria. "
             "Do not infer speaker identity, debate position, or turn order from any contextual clues.\n"
         )
+    elif variant == "motion_neutral":
+        prompt += (
+            "MOTION-NEUTRAL SCORING: This motion concerns competing legitimate values "
+            "(efficiency vs safety, autonomy vs accountability, opportunity vs precaution). "
+            "Do NOT treat appeals to risk, harm, precaution, the 'responsibility gap', or "
+            "catastrophic-failure precedents as inherently weightier than appeals to benefit, "
+            "speed, accuracy, scalability, or autonomy. Both stances are equally legitimate. "
+            "Argument strength = quality of reasoning + grounding in the evidence pack, NOT "
+            "topical alignment with caution. Penalize an unsupported appeal to fear exactly "
+            "as you would penalize an unsupported appeal to progress.\n"
+        )
     else:
         prompt += "Apply the rubric straight, with no bias warnings or discounts.\n"
 

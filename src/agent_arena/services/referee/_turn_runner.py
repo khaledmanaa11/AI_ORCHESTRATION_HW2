@@ -120,13 +120,17 @@ def run_turn(  # noqa: C901
         if raw is None:                                           # timeout → penalised skip
             return engine.apply_move(state, {"text": ""}, flag="timeout", retry_count=attempt)
 
-        _heartbeat_watchdog(channels, side)
+        _heartbeat_watchdog(channels, "PRO")
+        _heartbeat_watchdog(channels, "CON")
 
         try:
             env = decode(raw)
         except CodecError:                                        # bad content → drop frame
             send_fn(side, MessageType.ERROR,
                     {"code": ERROR_MALFORMED_MESSAGE, "message": "malformed"})
+            continue
+
+        if env.type == MessageType.HEARTBEAT:
             continue
 
         if env.type != MessageType.MOVE_SUBMIT:

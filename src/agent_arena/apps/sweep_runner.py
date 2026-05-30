@@ -207,7 +207,7 @@ def write_streams(
         }) + "\n")
 
 
-ALL_JUDGE_VARIANTS = ["naive", "hardened", "structural", "debiased", "blind"]
+ALL_JUDGE_VARIANTS = ["naive", "hardened", "structural", "debiased", "blind", "motion_neutral"]
 
 
 def run_sweep(
