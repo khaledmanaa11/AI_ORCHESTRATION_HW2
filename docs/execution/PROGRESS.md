@@ -1,6 +1,6 @@
 # PROGRESS — single source of truth
 
-**NEXT: F1**
+**NEXT: F2**
 
 > Each session: do the step named in `NEXT`, then move `NEXT` to the line below it.
 > Legend: `[ ]` todo · `[x]` done · `[!]` blocked (needs stronger model).
@@ -46,7 +46,7 @@
 - [x] E5 — Guard test: protocol dir unchanged + `PROTOCOL_VERSION == "1.00"`
 
 ## Part F — SDK & integration → `PART_F_sdk_integration.md`
-- [ ] F1 — Implement `ArenaSDK.start_referee` / `start_player`
+- [x] F1 — Implement `ArenaSDK.start_referee` / `start_player`
 - [ ] F2 — Wire referee_app + player_app through `ArenaSDK`
 - [ ] F3 — Move `LLMCallerMixin` to `shared/llm_caller.py`; both brains inherit it
 - [ ] F4 — Real-TCP localhost integration test: referee + 2 players → GAME_OVER
