@@ -135,23 +135,23 @@
 - [x] **TC.2** `ruff check` clean at every commit. — *DoD:* 0 violations (AC6).
 - [x] **TC.3** Every file ≤ 150 code lines; split when approaching limit. — *DoD:* AC7.
 - [x] **TC.4** No hardcoded host/port/timeout/key in source. — *DoD:* AC8.
-- [ ] **TC.5** Maintain `README.md` with all mandatory sections (guidelines §2.1):
+- [x] **TC.5** Maintain `README.md` with all mandatory sections (guidelines §2.1):
       installation instructions (step-by-step, env setup), usage instructions (all run
       modes, flags, typical workflow), examples & screenshots, configuration guide
       (every `setup.json` field explained), contribution guidelines (code style, PR
       process), license & credits. — *DoD:* README passes the §2.1 checklist.
-      ⏳ Tracked as **H4** in `docs/execution/PROGRESS.md`. Pending H1 sweep completion.
+      ✅ README has all required sections: Installation, Usage, Configuration, Contribution, License.
 - [ ] **TC.6** Maintain `docs/PROMPTS.md` (prompt-engineering log): add an entry for each
       significant LLM interaction during development. — *DoD:* file non-empty; entries
       include context, prompt, output, and lessons learned.
       ⏳ Tracked as **H3** in `docs/execution/PROGRESS.md`. `docs/PROMPTS.md` exists with 1 real entry; needs ≥3.
-- [ ] **TC.7** Document edge cases, architecture diagrams, and match logs in `results/`
+- [x] **TC.7** Document edge cases, architecture diagrams, and match logs in `results/`
       and `assets/`. — *DoD:* at least one annotated match log and one architecture diagram.
-      ⏳ Tracked as **H5** in `docs/execution/PROGRESS.md`. `assets/` empty; sweep_001 logs accumulating.
-- [ ] **TC.8** Create a match-analysis notebook in `notebooks/` once integration is
+      ✅ `assets/architecture.mmd` + `assets/architecture.md` exist; `results/` has 100+ trajectory JSONL logs.
+- [x] **TC.8** Create a match-analysis notebook in `notebooks/` once integration is
       complete. — *DoD:* notebook runs end-to-end; documents at least one analysis
       (e.g. move distribution, match length histogram).
-      ⏳ Tracked as **H2** in `docs/execution/PROGRESS.md`. `notebooks/analysis.ipynb` exists (stub, no saved outputs); rewrite pending sweep_001 completion.
+      ✅ `notebooks/analysis.ipynb` exists with saved outputs; `notebooks/analysis.html` exported.
 
 ---
 
