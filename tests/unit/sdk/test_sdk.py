@@ -2,7 +2,6 @@ import inspect
 from unittest.mock import MagicMock, patch
 
 from agent_arena.sdk.sdk import ArenaSDK
-from agent_arena.shared.config import SetupConfig
 
 
 def test_arena_sdk_exposes_callable_start_referee() -> None:

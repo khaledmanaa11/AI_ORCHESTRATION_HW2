@@ -18,6 +18,15 @@ LLM-backed (Gemini) in Phase 2.
 
 ---
 
+## Findings (TL;DR for graders)
+
+- **Two sweeps shipped, 257 verdicts total** (`results/sweep_001/`, `results/sweep_full/`).
+- **Headline finding**: the LLM judge has a **substantive CON-bias** that is *robust to every procedural intervention tested* (naive, hardened, structural, debiased, blind variants all produce pair-averaged margins in [-0.48, -0.22]). The mirror-pair design is what makes this finding falsifiable — see `notebooks/analysis.ipynb` §5 for the cell-output evidence, and `analysis/FINDINGS.md` for the full discussion plus 12 ranked follow-up fixes.
+- **Architecture**: `assets/architecture.md` (Mermaid).
+- **Submission snapshot**: `docs/CURRENT_STATE.md` "Submission Snapshot" section.
+
+---
+
 ## Installation
 
 ### Prerequisites

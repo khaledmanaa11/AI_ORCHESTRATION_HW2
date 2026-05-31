@@ -1,6 +1,26 @@
 # Current Project State
 
-Last updated: 2026-05-28
+Last updated: 2026-05-31
+
+## Submission Snapshot
+
+| Field | Value |
+|---|---|
+| Snapshot commit (pre-snapshot) | `5e244f7` (feat(motion): switch primary motion to HFT-ban; motion-keyed playbooks) |
+| Primary motion (run) | "Autonomous AI agents should be allowed to make consequential decisions without human approval" |
+| Sweeps used in analysis | `results/sweep_001/` (161 verdicts) + `results/sweep_full/` (96 verdicts) — **257 total verdicts** |
+| Analysis notebook | `notebooks/analysis.ipynb` (20 cells; headline mirror-pair section at §5) |
+| Findings document | `analysis/FINDINGS.md` (12 ranked observations, fixes A–L) |
+| Architecture diagram | `assets/architecture.mmd` (Mermaid source) + `assets/architecture.md` (rendered) |
+| Tests | 299 passing, coverage 90.57 % (target 85 %) |
+| Lint | `ruff check src tests` clean |
+| Known caveats | (1) sweep_full forfeit rate 20 % due to gatekeeper breaker trips under `max_concurrency=12` (since reverted to 8 in `config/setup.json`). (2) The `motion_neutral` judge variant and the HFT cross-motion test ship in code but were not run due to Gemini API credit exhaustion mid-session on 2026-05-31. Both interventions are documented in `analysis/FINDINGS.md` Fixes K and the motion swap. |
+
+See `analysis/FINDINGS.md` for the headline finding (mirror-pair-corrected CON-bias robust across all 5 judge variants) and `notebooks/analysis.ipynb` §5 for the cell-output evidence.
+
+---
+
+## Historical (pre-submission)
 
 ## Source Of Truth
 

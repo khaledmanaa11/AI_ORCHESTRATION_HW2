@@ -4,7 +4,8 @@ from __future__ import annotations
 import concurrent.futures
 import sys
 import threading
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from agent_arena.shared.api_gatekeeper import GatekeeperExhaustedError, get_default_gatekeeper
 
@@ -25,7 +26,7 @@ def execute_sweep_workers(
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         for item in work_items:
             futures.append(executor.submit(worker_fn, *item))
-        
+
         try:
             for future in concurrent.futures.as_completed(futures):
                 future.result()

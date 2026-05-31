@@ -1,0 +1,53 @@
+%% Agent Arena — process and message flow
+%% Render: `mmdc -i assets/architecture.mmd -o assets/architecture.svg`
+%% or paste into https://mermaid.live
+flowchart LR
+    subgraph Client_Side[Player processes]
+        PRO["Player PRO<br/>(LLMPlayerBrain)"]
+        CON["Player CON<br/>(LLMPlayerBrain)"]
+    end
+
+    subgraph Referee_Process[Referee process]
+        TCP[("TCP server :9000")]
+        Loop["DebateEngine + game_loop<br/>(turn dispatch, retry, timeout)"]
+        Judge["LLMRefereeBrain<br/>(EVALUATE_TURN, VERDICT)"]
+        Streams["Result writers<br/>stream_a / stream_b / stream_c"]
+    end
+
+    subgraph Shared[Shared services]
+        GK["api_gatekeeper<br/>(rpm/rpd + breaker)"]
+        Client["LLMClient<br/>(google.genai)"]
+        Pack[("evidence_pack_primary<br/>JSON")]
+    end
+
+    Gemini[("Gemini 2.5 Flash<br/>API")]
+    Sweep["sweep_runner<br/>(spawns referee + 2 players)"]
+
+    Sweep --> Referee_Process
+    Sweep --> PRO
+    Sweep --> CON
+
+    PRO <-->|MOVE_REQUEST / MOVE_SUBMIT| TCP
+    CON <-->|MOVE_REQUEST / MOVE_SUBMIT| TCP
+    TCP --> Loop
+    Loop --> Judge
+
+    PRO --> Client
+    CON --> Client
+    Judge --> Client
+    Client --> GK
+    GK --> Gemini
+
+    Pack --> PRO
+    Pack --> CON
+    Pack --> Judge
+
+    Loop --> Streams
+    Judge --> Streams
+
+    classDef proc fill:#e1f0ff,stroke:#3070b0,stroke-width:1px
+    classDef store fill:#fff3d0,stroke:#a07020,stroke-width:1px
+    classDef ext fill:#ffe0e0,stroke:#a04040,stroke-width:1px
+    class PRO,CON,Loop,Judge,Sweep,Client,GK proc
+    class Streams,Pack store
+    class Gemini ext

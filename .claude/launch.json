@@ -1,0 +1,33 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "referee",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "referee"],
+      "port": 9000
+    },
+    {
+      "name": "player-PRO",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "player", "--side", "PRO"],
+      "port": 9000
+    },
+    {
+      "name": "player-CON",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "player", "--side", "CON"],
+      "port": 9000
+    },
+    {
+      "name": "sweep-hft-v1",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run", "python", "-m", "agent_arena.apps.sweep_runner",
+        "--real", "--variants", "naive", "motion_neutral",
+        "-k", "5", "--sweep-id", "sweep_hft_v1"
+      ],
+      "port": 9000
+    }
+  ]
+}

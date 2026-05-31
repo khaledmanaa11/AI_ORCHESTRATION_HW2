@@ -1,0 +1,24 @@
+{
+  "evidence_pack_sha256": "bade145192db59683fd7d7b98cf476254cba96b219539184d5d801f36ad170a4",
+  "motion_id": "High-frequency algorithmic trading should be banned in equity markets",
+  "k": 5,
+  "started_at": "2026-05-31T09:45:09.709989+00:00",
+  "total_matches": 20,
+  "completed": 0,
+  "forfeited": 1,
+  "quota_aborted": 0,
+  "pro_wins": 20,
+  "con_wins": 0,
+  "mean_margin": 0.0,
+  "mean_turns": 0.0,
+  "gatekeeper_final_snapshot": {
+    "rpm_tokens": 1999.0,
+    "rpd_remaining": 9985,
+    "rpd_resets_at": "2026-06-01T00:00:00+00:00",
+    "in_flight": 0,
+    "max_concurrency": 8,
+    "breaker_state": "OPEN",
+    "consecutive_failures": 0,
+    "breaker_opened_at": "1970-01-03T16:29:09.531000+00:00"
+  }
+}

@@ -1,10 +1,11 @@
 import logging
 import threading
 import time
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Callable, Iterator, Literal, Optional
+from typing import Literal, Optional
 
 from agent_arena.shared.config import load_setup_config
 
@@ -98,10 +99,9 @@ class APIGatekeeper:
 
     @staticmethod
     def _next_utc_midnight(now: datetime) -> datetime:
-        tomorrow = (now + timedelta(days=1)).replace(
+        return (now + timedelta(days=1)).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        return tomorrow
 
     def _refill_locked(self) -> None:
         now = self._clock()
