@@ -87,6 +87,9 @@ uv run pytest
 ```bash
 uv run ruff check
 ```
+Scope is `src/` + `tests/` only — `notebooks/`, `scripts/`, and `analysis/` are excluded
+in `pyproject.toml` because the exploratory style there (one-liners, inline `open()`) is
+intentional.
 
 ---
 
