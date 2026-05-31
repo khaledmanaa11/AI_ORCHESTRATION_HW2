@@ -113,7 +113,7 @@ for cell in nb["cells"]:
             "fig, ax = plt.subplots(figsize=(9, 5))\n"
             "order = pair_summary.sort_values('pair_avg_margin').index.tolist()\n"
             "data_per_variant = [df_pairs[df_pairs.variant == v]['pair_margin'].values for v in order]\n"
-            "bp = ax.boxplot(data_per_variant, labels=order, patch_artist=True,\n"
+            "bp = ax.boxplot(data_per_variant, tick_labels=order, patch_artist=True,\n"
             "                boxprops=dict(facecolor='lightcoral', alpha=0.7),\n"
             "                medianprops=dict(color='black'))\n"
             "# Overlay raw points\n"
